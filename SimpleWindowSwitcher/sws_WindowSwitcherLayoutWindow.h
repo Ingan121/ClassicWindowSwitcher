@@ -11,8 +11,8 @@ typedef struct _sws_WindowSwitcherLayoutWindow
 {
     HWND hWnd;
     SIZE sizWindow;
-    HTHUMBNAIL hThumbnail;
-    RECT rcThumbnail;
+    UINT gridX;
+	UINT gridY;
     RECT rcWindow;
     int iRowMax;
     HICON hIcon;

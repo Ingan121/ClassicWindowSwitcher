@@ -25,18 +25,21 @@
 typedef struct _sws_WindowSwitcher
 {
     BOOL bIsDynamic;
-    BOOL bWithRegMon;
+    //BOOL bWithRegMon;
     HRESULT hrCo;
     HRESULT hrRo;
     HMODULE hinstDLL;
     HWND hWnd;
     UINT msgShellHook;
     sws_WindowSwitcherLayout layout;
+    int direction;
+	int scrollDirection;
+    int lastKey;
     //sws_WindowSwitcherLayout layouts[SWS_WINDOWSWITCHER_MAX_NUM_MONITORS];
     //sws_WindowSwitcherLayout minilayouts[SWS_WINDOWSWITCHER_MAX_NUM_MONITORS];
     //UINT numLayouts;
     //UINT numLayoutsMax;
-    HBRUSH hContourBrush;
+    //HBRUSH hContourBrush;
     HBRUSH hBackgroundBrush;
     HBRUSH hCloseButtonBrush;
     HTHEME hTheme;
@@ -49,7 +52,7 @@ typedef struct _sws_WindowSwitcher
     INT cwIndex;
     DWORD cwMask;
     HANDLE hEvExit;
-    BOOL bIsDarkMode;
+    //BOOL bIsDarkMode;
     BOOL bIsMouseClicking;
     long long last_change;
     sws_vector pHWNDList;
@@ -118,8 +121,6 @@ static void _sws_WindowSwitcher_UpdateAccessibleText(sws_WindowSwitcher* _this);
 sws_error_t sws_WindowSwitcher_RegisterHotkeys(sws_WindowSwitcher* _this, HKL hkl);
 
 void sws_WindowSwitcher_UnregisterHotkeys(sws_WindowSwitcher* _this);
-
-void sws_WindowSwitcher_RefreshTheme(sws_WindowSwitcher* _this);
 
 void _sws_WindowSwitcher_SwitchToSelectedItemAndDismiss(sws_WindowSwitcher* _this);
 

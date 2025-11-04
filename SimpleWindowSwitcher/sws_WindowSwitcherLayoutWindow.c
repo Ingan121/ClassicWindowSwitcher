@@ -9,11 +9,6 @@ int sws_WindowSwitcherLayoutWindow_AddGroupedWnd(sws_WindowSwitcherLayoutWindow*
 
 void sws_WindowSwitcherLayoutWindow_Erase(sws_WindowSwitcherLayoutWindow* _this)
 {
-    if (_this->hThumbnail)
-    {
-        sws_error_Report(sws_error_GetFromHRESULT(DwmUnregisterThumbnail(_this->hThumbnail)), NULL);
-        _this->hThumbnail = 0;
-    }
     SIZE siz;
     siz.cx = 0;
     siz.cy = 0;
@@ -23,18 +18,12 @@ void sws_WindowSwitcherLayoutWindow_Erase(sws_WindowSwitcherLayoutWindow* _this)
     rc.top = 0;
     rc.bottom = 0;
     rc.right = 0;
-    _this->rcThumbnail = rc;
     _this->rcWindow = rc;
     _this->iRowMax = 0;
 }
 
 void sws_WindowSwitcherLayoutWindow_Clear(sws_WindowSwitcherLayoutWindow* _this)
 {
-    if (_this->hThumbnail)
-    {
-        DwmUnregisterThumbnail(_this->hThumbnail);
-        _this->hThumbnail = 0;
-    }
     //if (_this->hIcon && !_this->bOwnProcess)
     if (_this->hIcon && sws_DefAppIcon && _this->hIcon != sws_DefAppIcon && sws_LegacyDefAppIcon && _this->hIcon != sws_LegacyDefAppIcon)
     {

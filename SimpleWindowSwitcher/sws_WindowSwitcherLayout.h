@@ -29,6 +29,7 @@ typedef struct _sws_WindowSwitcherLayout
 	unsigned int cbDpiX;
 	unsigned int cbDpiY;
 	int iIndex;
+	int iFirstItemIndex;
 	MONITORINFO mi;
 	unsigned int cbMaxHeight;
 	unsigned int cbMaxWidth;
@@ -57,7 +58,7 @@ typedef struct _sws_WindowSwitcherLayout
 	BOOL bWallpaperToggleBehavior;
 	HWND hWndWallpaper;
 	HFONT hFontRegular;
-	HFONT hFontRegular2;
+	unsigned int cbFontHeight;
 	long long timestamp;
 } sws_WindowSwitcherLayout;
 

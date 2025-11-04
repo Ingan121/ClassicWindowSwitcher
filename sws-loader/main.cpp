@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <Windows.h>
+
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+int main(int argc, char** argv)
+{
+	HMODULE hModule = LoadLibraryW(L"SimpleWindowSwitcher.dll");
+	if (!hModule) {
+		if (argc == -1)
+		{
+			MessageBoxW(NULL, L"Failed to load SimpleWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
+		}
+		printf("Failed to load SimpleWindowSwitcher.dll\n");
+		return 1;
+	}
+	void* main = GetProcAddress(hModule, "main");
+	if (main) {
+		((void(*)(DWORD))main)(0);
+	}
+	else
+	{
+		if (argc == -1)
+		{
+			MessageBoxW(NULL, L"Failed to load SimpleWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
+		}
+		printf("Failed to find main function in SimpleWindowSwitcher.dll\n");
+		FreeLibrary(hModule);
+		return 1;
+	}
+	FreeLibrary(hModule);
+	return 0;
+}
+
+int WINAPI WinMain(
+	_In_ HINSTANCE hInstance,
+	_In_ HINSTANCE hPrevInstance,
+	_In_ LPSTR     lpCmdLine,
+	_In_ int       nCmdShow
+)
+{
+	return main(-1, NULL);
+}

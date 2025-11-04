@@ -1,10 +1,13 @@
-# Simple Window Switcher
-Simple Window Switcher (sws) is an Alt-Tab replacement for Windows.
+# Classic Window Switcher
+* Classic Window Switcher (cws) is a reimplementation of the classic CSRSS Windows Alt+Tab window switcher, designed to work on modern versions of Windows, including Windows 11 24H2 and later.
+* Also, it features more modern features, such as UWP icon support, richer navigation with mouse and arrow keys, and more.
+* Based on the Simple Window Switcher (sws) from ExplorerPatcher by Valinet.
 
 ![Build status](https://github.com/valinet/sws/actions/workflows/build.yml/badge.svg)
 
 ## Example usage
-An application which implements this is [ExplorerPatcher](https://github.com/valinet/ExplorerPatcher). This project can also be compiled as a library and used standalone in your current workflow.
+* Build `SimpleWindowSwitcher` and `sws-loader` projects, and run `sws-loader.exe` from command line.
+* Loading CWS inside Explorer.exe is also possible by using the `ep-sws-loader.wh.cpp` Windhawk mod from this repository, but it's not yet production ready and you must change the hardcoded path to `SimpleWindowSwitcher.dll` in the source code before compiling it.
 
 ## Compiling
 
@@ -54,3 +57,11 @@ Steps:
    The resulting libraries will be in the "Release" (for x86) or "x64\Release" (for x64) folder in the directory containing the solution file.
 
 That's it.
+
+
+## TODO
+* Match item & window dimensions to that of classic switcher [OK]
+* Implement title display [OK]
+* Center icons if < 6 windows [OK]
+* Implement column number limit & scrolling [OK]
+* Read CoolSwitch setting from registry

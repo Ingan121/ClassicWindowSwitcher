@@ -36,9 +36,6 @@
     <ClCompile Include="sws_WindowSwitcherLayoutWindow.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sws_RegistryMonitor.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sws_window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
