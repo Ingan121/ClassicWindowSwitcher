@@ -7,16 +7,16 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 int main(int argc, char** argv)
 {
-	HMODULE hModule = LoadLibraryW(L"SimpleWindowSwitcher.dll");
+	HMODULE hModule = LoadLibraryW(L"ClassicWindowSwitcher.dll");
 	if (!hModule) {
 		if (argc == -1)
 		{
-			MessageBoxW(NULL, L"Failed to load SimpleWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
+			MessageBoxW(NULL, L"Failed to load ClassicWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
 		}
-		printf("Failed to load SimpleWindowSwitcher.dll\n");
+		printf("Failed to load ClassicWindowSwitcher.dll\n");
 		return 1;
 	}
-	void* main = GetProcAddress(hModule, "main");
+	void* main = GetProcAddress(hModule, "sws_main");
 	if (main) {
 		((void(*)(DWORD))main)(0);
 	}
@@ -24,9 +24,9 @@ int main(int argc, char** argv)
 	{
 		if (argc == -1)
 		{
-			MessageBoxW(NULL, L"Failed to load SimpleWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
+			MessageBoxW(NULL, L"Failed to load ClassicWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
 		}
-		printf("Failed to find main function in SimpleWindowSwitcher.dll\n");
+		printf("Failed to find main function in ClassicWindowSwitcher.dll\n");
 		FreeLibrary(hModule);
 		return 1;
 	}

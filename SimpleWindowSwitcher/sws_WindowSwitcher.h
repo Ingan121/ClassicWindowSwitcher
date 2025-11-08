@@ -7,7 +7,6 @@
 #include <Windows.h>
 #include <windowsx.h>
 #include <tchar.h>
-#include <Uxtheme.h>
 #pragma comment(lib, "Uxtheme.lib")
 #include <Shlobj_core.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -19,13 +18,11 @@
 #include "sws_window.h"
 #include "sws_utility.h"
 #include "sws_WindowSwitcherLayout.h"
-#include "sws_RegistryMonitor.h"
 #include "sws_tshwnd.h"
 
 typedef struct _sws_WindowSwitcher
 {
     BOOL bIsDynamic;
-    //BOOL bWithRegMon;
     HRESULT hrCo;
     HRESULT hrRo;
     HMODULE hinstDLL;
@@ -35,24 +32,15 @@ typedef struct _sws_WindowSwitcher
     int direction;
 	int scrollDirection;
     int lastKey;
-    //sws_WindowSwitcherLayout layouts[SWS_WINDOWSWITCHER_MAX_NUM_MONITORS];
-    //sws_WindowSwitcherLayout minilayouts[SWS_WINDOWSWITCHER_MAX_NUM_MONITORS];
-    //UINT numLayouts;
-    //UINT numLayoutsMax;
-    //HBRUSH hContourBrush;
     HBRUSH hBackgroundBrush;
-    HBRUSH hCloseButtonBrush;
-    HTHEME hTheme;
     BOOL bPartialRedraw;
     ITaskbarList* pTaskList;
     HWND hWndLast;
     BOOL bWasControl;
-    sws_RegistryMonitor rm;
     HMONITOR hMonitor;
     INT cwIndex;
     DWORD cwMask;
     HANDLE hEvExit;
-    //BOOL bIsDarkMode;
     BOOL bIsMouseClicking;
     long long last_change;
     sws_vector pHWNDList;
@@ -62,9 +50,6 @@ typedef struct _sws_WindowSwitcher
     UINT mode;
     HWND lastMiniModehWnd;
     HWINEVENTHOOK global_hook;
-    DWORD dwColorScheme;
-    DWORD dwTheme;
-    DWORD dwCornerPreference;
     DWORD dwShowDelay;
     BOOL bPrimaryOnly;
     sws_IInputSwitchCallback InputSwitchCallback;
@@ -92,21 +77,18 @@ typedef struct _sws_WindowSwitcher
     BOOL bShouldStartFlashTimerWhenShowing;
     DWORD dwOriginalMouseRouting;
     DWORD dwOriginalScrollWheelBehavior;
+	BOOL bIsCursorOnSwitcher;
 
-    DWORD dwRowHeight;
-    DWORD dwMaxWP;
-    DWORD dwMaxHP;
     DWORD bIncludeWallpaper;
     DWORD bPerMonitor;
-    DWORD dwMaxAbsoluteWP;
-    DWORD dwMaxAbsoluteHP;
     DWORD bNoPerApplicationList;
-    DWORD dwMasterPadding;
-    DWORD dwWallpaperSupport;
-    DWORD bSwitcherIsPerApplication;
+	DWORD dwWallpaperSupport;
+	DWORD bSwitcherIsPerApplication;
     DWORD bAlwaysUseWindowTitleAndIcon;
     DWORD dwScrollWheelBehavior;
     DWORD bScrollWheelInvert;
+	DWORD dwGridColumns;
+    DWORD dwGridRows;
 } sws_WindowSwitcher;
 
 typedef struct _sws_WindowSwitcher_EndTaskThreadParams
@@ -136,10 +118,12 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_RunMessageQueue(sws_WindowS
 
 __declspec(dllexport) void sws_WindowSwitcher_Clear(sws_WindowSwitcher* _this);
 
-__declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitcher** __this, BOOL bWithRegMon);
+__declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitcher** __this);
 
 void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags);
 
 void sws_WindowSwitcher_InitializeDefaultSettings(sws_WindowSwitcher* _this);
+
+void sws_WindowSwitcher_LoadSettings(sws_WindowSwitcher* _this);
 
 #endif

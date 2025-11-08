@@ -68,9 +68,6 @@
     <ClInclude Include="sws_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sws_RegistryMonitor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sws_dll.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -293,13 +293,13 @@ static void WINAPI _sws_WindowSwitcher_Calculate(sws_WindowSwitcher* _this, HWND
             &(_this->layout), 
             _this->hMonitor, 
             _this->hWnd, 
-            &(_this->dwRowHeight), 
+            &(_this->bIncludeWallpaper), 
             &(_this->pHWNDList), 
             (_this->mode ? _this->lastMiniModehWnd: NULL),
             _this->hWndWallpaper
         );
         long long init = sws_milliseconds_now();
-        sws_WindowSwitcherLayout_ComputeLayout(&(_this->layout), SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_INITIAL, hWndInitial);
+        sws_WindowSwitcherLayout_ComputeLayout(&(_this->layout), SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_INITIAL, hWndInitial, _this->dwGridColumns, _this->dwGridRows);
         long long fin = sws_milliseconds_now();
         printf("[sws] CalculateHelper %d [[ %lld + %lld = %lld ]].\n", _this->mode, init - start, fin - init, fin - start);
 
@@ -388,38 +388,7 @@ static void WINAPI _sws_WindowSwitcher_Calculate(sws_WindowSwitcher* _this, HWND
         }
         if (selectionIndex == -1)
         {
-			printf("here, iIndex=%d, numTopMost=%d\n", _this->layout.iIndex, _this->layout.numTopMost);
             _this->layout.iIndex = _this->layout.pWindowList.cbSize == 1 ? 0 : _this->layout.iIndex - 1 - _this->layout.numTopMost;
-			printf("iIndex adjusted to %d\n", _this->layout.iIndex);
-            //if (hWndInitial == _this->layout.hWndWallpaper)
-            //{
-            //    if (_this->layout.bWallpaperAlwaysLast)
-            //    {
-            //        if (!_this->layout.bWallpaperToggleBehavior)
-            //        {
-            //            // BEHAVIOR 1
-            //            _this->layout.iIndex = _this->layout.pWindowList.cbSize - 1;
-            //        }
-            //        else
-            //        {
-            //            // BEHAVIOR 2
-            //            _this->layout.iIndex = 0;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        if (!_this->layout.bWallpaperToggleBehavior)
-            //        {
-            //            // BEHAVIOR 1
-            //        }
-            //        else
-            //        {
-            //            // BEHAVIOR 2
-            //            _this->layout.iIndex = _this->layout.pWindowList.cbSize - 1;
-            //        }
-            //    }
-            //}
-			printf("final iIndex=%d\n", _this->layout.iIndex);
         }
         if (_this->layout.iIndex < 0)
         {
@@ -432,21 +401,6 @@ static void WINAPI _sws_WindowSwitcher_Calculate(sws_WindowSwitcher* _this, HWND
 
         break;
     }
-}
-
-static sws_error_t _sws_WindowSwitcher_GetCloseButtonRectFromIndex(sws_WindowSwitcher* _this, DWORD dwIndex, LPRECT lpRect)
-{
-    sws_WindowSwitcherLayoutWindow* pWindowList = _this->layout.pWindowList.pList;
-    if (pWindowList)
-    {
-        RECT rc = pWindowList[dwIndex].rcWindow;
-        lpRect->left = rc.right - _this->layout.cbRowTitleHeight;
-        lpRect->top = rc.top + _this->layout.cbTopPadding;
-        lpRect->right = rc.right - _this->layout.cbRightPadding;
-        lpRect->bottom = rc.top + _this->layout.cbRowTitleHeight;
-        return SWS_ERROR_SUCCESS;
-    }
-    return SWS_ERROR_GENERIC_ERROR;
 }
 
 void _sws_WindowSwitcher_SwitchToSelectedItemAndDismiss(sws_WindowSwitcher* _this)
@@ -617,7 +571,7 @@ sws_error_t sws_WindowSwitcher_RegisterHotkeys(sws_WindowSwitcher* _this, HKL hk
         }
     }
     _this->bNoPerApplicationListPrevious = _this->bNoPerApplicationList;
-	printf("[sws] Hotkey registration result: %d\n", rv);
+	//printf("[sws] Hotkey registration result: %d\n", rv);
 
     return rv;
 }
@@ -641,7 +595,6 @@ void sws_WindowSwitcher_UnregisterHotkeys(sws_WindowSwitcher* _this)
 void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
 {
     HWND hWnd = _this->hWnd;
-    DWORD dwTheme = _this->dwTheme;
     BOOL bIsWindowVisible = IsWindowVisible(_this->hWnd);
 
     PAINTSTRUCT ps;
@@ -668,7 +621,6 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
 		r = GetRValue(btnFace) * a / 255;
 		g = GetGValue(btnFace) * a / 255;
 		b = GetBValue(btnFace) * a / 255;
-		//printf("r=%d g=%d b=%d a=%d bIsDarkMode=%d dwTheme=%d\n", r, g, b, a, _this->bIsDarkMode, _this->dwTheme);
         RGBQUAD bkcol = { b, g, r, a };
 
         // Draw background
@@ -684,11 +636,13 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
             bi.bmiHeader.biCompression = BI_RGB;
             StretchDIBits(hdcPaint, 0, 0, siz.cx, siz.cy, 0, 0, 1, 1, &bkcol, &bi, DIB_RGB_COLORS, SRCCOPY);
         }
+        
+        UINT col = _this->dwGridColumns;
+        UINT row = _this->dwGridRows;
 
-        UINT row = 7;
-        UINT col = 3;
-
-		RECT rcTitleArea = { 12, siz.cy - _this->layout.cbFontHeight, siz.cx - 12, siz.cy - 6 };
+		int bottom = siz.cy - _this->layout.cbFontHeight;
+		RECT rcTitleArea = { 11, bottom - _this->layout.cbFontHeight, siz.cx - 11, bottom };
+        InflateRect(&rcTitleArea, 0, _this->layout.cbFontHeight / 2);
         DrawEdge(
             hdcPaint,
             &rcTitleArea,
@@ -698,8 +652,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
 
 		SetTextColor(hdcPaint, GetSysColor(COLOR_BTNTEXT));
 		SetBkMode(hdcPaint, TRANSPARENT);
-        rcTitleArea.left += 4;
-        rcTitleArea.right -= 4;
+		InflateRect(&rcTitleArea, -4, 0);
 
         void* pGdipGraphics = NULL;
         GdipCreateFromHDC(
@@ -726,7 +679,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
         {
             if (i-- == 0)
             {
-                if (_this->layout.pWindowList.cbSize <= row * col)
+                if (_this->layout.pWindowList.cbSize <= col * row)
                 {
                     break;
                 }
@@ -736,7 +689,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
                 }
             }
             gridX++;
-            if (gridX > row - 1)
+            if (gridX > col - 1)
             {
                 gridX = 0;
                 gridY++;
@@ -745,20 +698,20 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
             pWindowList[i].gridY = gridY;
             if (i == _this->layout.iIndex)
             {
-                if (_this->layout.pWindowList.cbSize > row)
+                if (_this->layout.pWindowList.cbSize > col)
                 {
-					UINT lastRowItemCnt = _this->layout.pWindowList.cbSize % row;
-					UINT lastCol = (_this->layout.pWindowList.cbSize / row) + (lastRowItemCnt ? 1 : 0);
+					UINT lastColItemCnt = _this->layout.pWindowList.cbSize % col;
+					UINT lastRow = (_this->layout.pWindowList.cbSize / col) + (lastColItemCnt ? 1 : 0);
                     if (_this->lastKey == VK_UP)
                     {
                         selGridX = gridX;
                         selGridY = gridY - 1;
-                        if (_this->layout.pWindowList.cbSize > row * col)
+                        if (_this->layout.pWindowList.cbSize > col * row)
                         {
-                            if (selGridY > col - 1)
+                            if (selGridY > row - 1)
                             {
                                 selGridY = 0;
-                                _this->layout.iFirstItemIndex += row;
+                                _this->layout.iFirstItemIndex += col;
                                 if (_this->layout.iFirstItemIndex > _this->layout.pWindowList.cbSize - 1)
                                 {
                                     _this->layout.iFirstItemIndex -= _this->layout.pWindowList.cbSize;
@@ -768,10 +721,10 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
                         }
 						else if (selGridY == -1)
                         {
-							selGridY = lastCol - 1;
-                            if (lastRowItemCnt > 0 && selGridX >= lastRowItemCnt)
+							selGridY = lastRow - 1;
+                            if (lastColItemCnt > 0 && selGridX >= lastColItemCnt)
                             {
-                                selGridX = lastRowItemCnt - 1;
+                                selGridX = lastColItemCnt - 1;
                             }
                         }
                         if (selGridY < 0)
@@ -783,12 +736,12 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
                     {
                         selGridX = gridX;
                         selGridY = gridY + 1;
-                        if (_this->layout.pWindowList.cbSize > row * col)
+                        if (_this->layout.pWindowList.cbSize > col * row)
                         {
-                            if (selGridY > col - 1)
+                            if (selGridY > row - 1)
                             {
-                                selGridY = col - 1;
-                                _this->layout.iFirstItemIndex -= row;
+                                selGridY = row - 1;
+                                _this->layout.iFirstItemIndex -= col;
                                 if (_this->layout.iFirstItemIndex < 0)
                                 {
                                     _this->layout.iFirstItemIndex += _this->layout.pWindowList.cbSize;
@@ -796,18 +749,18 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
                                 recalcNeeded = TRUE;
                             }
                         }
-                        else if (selGridY >= lastCol - 1)
+                        else if (selGridY >= lastRow - 1)
                         {
-                            if (selGridY > lastCol - 1)
+                            if (selGridY > lastRow - 1)
                             {
                                 selGridY = 0;
 							}
-                            if (lastRowItemCnt > 0 && selGridX >= lastRowItemCnt)
+                            if (lastColItemCnt > 0 && selGridX >= lastColItemCnt)
                             {
-                                selGridX = lastRowItemCnt - 1;
+                                selGridX = lastColItemCnt - 1;
                             }
                         }
-                        //printf("asdf - selGridX >= lastRowItemCnt: %d >= %d (%d) && selGridY == col - 1: %d == %d (%d)\n", selGridX, lastRowItemCnt, selGridX >= lastRowItemCnt, selGridY, col - 1, selGridY == col - 1);
+                        //printf("asdf - selGridX >= lastColItemCnt: %d >= %d (%d) && selGridY == row - 1: %d == %d (%d)\n", selGridX, lastColItemCnt, selGridX >= lastColItemCnt, selGridY, row - 1, selGridY == row - 1);
                         if (selGridY < 0)
                         {
                             selGridY = 0;
@@ -826,7 +779,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
                 }
 				_this->lastKey = NULL;
             }
-            if (gridY >= col)
+            if (gridY >= row)
             {
                 break;
             }
@@ -834,6 +787,9 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
 
         if (recalcNeeded)
         {
+            _this->cwMask = 0;
+            _this->cwIndex = -1;
+
             gridX = -1;
             gridY = 0;
             for (unsigned int j = 0; j < _this->layout.pWindowList.cbSize; ++j)
@@ -846,7 +802,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
             {
                 if (i-- == 0)
                 {
-                    if (_this->layout.pWindowList.cbSize <= row * col)
+                    if (_this->layout.pWindowList.cbSize <= col * row)
                     {
                         break;
                     }
@@ -856,14 +812,14 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
                     }
                 }
                 gridX++;
-                if (gridX > row - 1)
+                if (gridX > col - 1)
                 {
                     gridX = 0;
                     gridY++;
                 }
                 pWindowList[i].gridX = gridX;
                 pWindowList[i].gridY = gridY;
-                if (gridY >= col)
+                if (gridY >= row)
                 {
                     break;
                 }
@@ -876,7 +832,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
         {
 			UINT gridX = pWindowList[i].gridX;
 			UINT gridY = pWindowList[i].gridY;
-            if (gridY >= col || gridY == -1)
+            if (gridY >= row || gridY == -1)
             {
                 continue;
             }
@@ -884,12 +840,12 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
             {
                 _this->layout.iIndex = i;
 			}
-            if (i == _this->layout.iIndex && _this->layout.pWindowList.cbSize > row * col)
+            if (i == _this->layout.iIndex && _this->layout.pWindowList.cbSize > col * row)
             {
                 //printf("i nsgX nsgY gridX gridY: %d %d %d %d %d\n", i, selGridX, selGridY, gridX, gridY);
                 if (_this->direction == SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_FORWARD)
                 {
-                    if (gridX == row - 1 && gridY == col - 1)
+                    if (gridX == col - 1 && gridY == row - 1)
                     {
 						_this->scrollDirection = SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_FORWARD;
                     }
@@ -996,7 +952,7 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
             
             // Grid layout
 			UINT leftStart = 13;
-            if (_this->layout.pWindowList.cbSize < row)
+            if (_this->layout.pWindowList.cbSize < col)
             {
 				leftStart = (_this->layout.iWidth - _this->layout.pWindowList.cbSize * SWS_WINDOWSWITCHERLAYOUT_ITEMSIZE) / 2 - 2;
             }
@@ -1251,6 +1207,8 @@ void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags)
 
 static void WINAPI _sws_WindowSwitcher_Show(sws_WindowSwitcher* _this)
 {
+    sws_WindowSwitcher_InitializeDefaultSettings(_this);
+	sws_WindowSwitcher_LoadSettings(_this);
     long long a1 = sws_milliseconds_now();
     if (_this->dwWallpaperSupport == SWS_WALLPAPERSUPPORT_EXPLORER)
     {
@@ -1356,7 +1314,7 @@ static void WINAPI _sws_WindowSwitcher_Show(sws_WindowSwitcher* _this)
         return;
     }
     _this->layout.iFirstItemIndex = _this->layout.pWindowList.cbSize;
-	printf("cbsize=%d\n", _this->layout.pWindowList.cbSize);
+	printf("[sws] cbSize=%d\n", _this->layout.pWindowList.cbSize);
     if (_this->hdcWindow)
     {
         EndBufferedPaint(_this->hBufferedPaint, FALSE);
@@ -1991,7 +1949,10 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
             KillTimer(hWnd, SWS_WINDOWSWITCHER_TIMER_ASYNCKEYCHECK);
             _this->lastMiniModehWnd = NULL;
             //sws_WindowSwitcherLayout_Clear(&(_this->layout));
-            if (_this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE)
+            if (_this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE ||
+                _this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_IFCLIENTAREA_GRIDSCROLL ||
+                _this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_GRIDSCROLL
+                )
             {
                 if (_this->dwOriginalMouseRouting != -1) SystemParametersInfoW(SPI_SETMOUSEWHEELROUTING, 0, _this->dwOriginalMouseRouting, 0);
             }
@@ -2002,7 +1963,10 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
         {
             //SetWindowPos(_this->hWnd, 0, _this->layout.iX, _this->layout.iY, _this->layout.iWidth, _this->layout.iHeight, SWP_NOZORDER);
             _this->dwOriginalScrollWheelBehavior = _this->dwScrollWheelBehavior;
-            if (_this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE)
+            if (_this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE ||
+                _this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_IFCLIENTAREA_GRIDSCROLL ||
+                _this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_GRIDSCROLL
+                )
             {
                 DWORD dwOriginalMouseRouting = -1;
                 if (SystemParametersInfoW(SPI_GETMOUSEWHEELROUTING, 0, &dwOriginalMouseRouting, 0)) _this->dwOriginalMouseRouting = dwOriginalMouseRouting;
@@ -2030,6 +1994,8 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 		tme.hwndTrack = hWnd;
 		TrackMouseEvent(&tme);
 
+		_this->bIsCursorOnSwitcher = TRUE;
+
         int x = GET_X_LPARAM(lParam);
         int y = GET_Y_LPARAM(lParam);
         sws_WindowSwitcherLayoutWindow* pWindowList = _this->layout.pWindowList.pList;
@@ -2038,11 +2004,7 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
             INT cwIndex = -1, cwMask = 0;
             for (unsigned int i = 0; i < _this->layout.pWindowList.cbSize; ++i)
             {
-                RECT rc;
-
-                rc = pWindowList[i].rcWindow;
-                RECT rcText;
-                _sws_WindowSwitcher_GetCloseButtonRectFromIndex(_this, i, &rcText);
+                RECT rc = pWindowList[i].rcWindow;
                 if (x > rc.left && x < rc.right && y > rc.top && y < rc.bottom)
                 {
                     cwMask |= SWS_WINDOWFLAG_IS_ON_WINDOW;
@@ -2063,6 +2025,7 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     }
     else if (uMsg == WM_MOUSELEAVE)
     {
+        _this->bIsCursorOnSwitcher = FALSE;
         if (_this->cwMask != 0)
         {
             _this->cwOldIndex = _this->cwIndex;
@@ -2163,12 +2126,6 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     }
     else if (uMsg == WM_HOTKEY || uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN || (uMsg == WM_MOUSEWHEEL && _this && _this->dwOriginalScrollWheelBehavior != SWS_SCROLLWHEELBEHAVIOR_DISABLED))
     {
-        /*if (uMsg == WM_HOTKEY && (int)wParam == 0)
-        {
-            _this->bWasControl = FALSE;
-            ShowWindow(_this->hWnd, SW_HIDE);
-            return 0;
-        }*/
         if (uMsg == WM_HOTKEY && (LOWORD(lParam) & MOD_CONTROL))
         {
             _this->bWasControl = TRUE;
@@ -2195,42 +2152,6 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
                     _this->mode = SWS_WINDOWSWITCHER_LAYOUTMODE_FULL;
                 }
                 _sws_WindowSwitcher_Show(_this);
-
-                /*
-                BOOL bAltDepressed = FALSE;
-                HANDLE hThread = CreateThread(0, 0, _sws_WindowSwitcher_PrepareShow, _this, 0, 0);
-                while (GetKeyState(VK_MENU) & 0x8000)
-                {
-                    DWORD dwRet = WaitForSingleObject(
-                        hThread,
-                        0
-                    );
-                    if (dwRet == WAIT_OBJECT_0)
-                    {
-                        if (_this->layout.pWindowList.cbSize == 0)
-                        {
-                            return 0;
-                        }
-                        Sleep(1);
-                        _this->bPartialRedraw = FALSE;
-                        SetWindowPos(_this->hWnd, 0, _this->layout.iX, _this->layout.iY, _this->layout.iWidth, _this->layout.iHeight, SWP_NOZORDER);
-                        ShowWindow(_this->hWnd, SW_SHOW);
-                        SetForegroundWindow(_this->hWnd);
-                        return 0;
-                    }
-                }
-                int k = 0;
-                sws_WindowHelpers_RealEnumWindows((WNDENUMPROC)_sws_WindowSwitcher_EnumWindowsCallback, (LPARAM)_this);
-                if (_this->layout.bIncludeWallpaper && _this->hWndLast != 0)
-                {
-                    _sws_WindowSwitcher_ToggleDesktop(_this);
-                }
-                WaitForSingleObject(
-                    hThread,
-                    INFINITE
-                );
-                sws_WindowSwitcherLayout_Clear(&(_this->layout));
-                */
                 return 0;
             }
             else
@@ -2261,66 +2182,93 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
                     return 0;
                 }
 
-				UINT row = 7;
-                UINT col = 3;
+				UINT col = _this->dwGridColumns;
+                UINT row = _this->dwGridRows;
 
-                int indexStart = _this->layout.iIndex; // avoids infinite cycles
-                if (
-                    ((uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && (GetKeyState(VK_SHIFT) & 0x8000)) ||
-                    (uMsg == WM_HOTKEY && (LOWORD(lParam) & MOD_SHIFT)) ||
-                    ((uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && wParam == VK_LEFT) ||
-                    ((uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && wParam == VK_UP) ||
-                    (uMsg == WM_MOUSEWHEEL && (_this->bScrollWheelInvert ? GET_WHEEL_DELTA_WPARAM(wParam) < 0 : GET_WHEEL_DELTA_WPARAM(wParam) > 0))
+				BOOL bIsGridScrolling = FALSE;
+				if (uMsg == WM_MOUSEWHEEL && _this->layout.pWindowList.cbSize > col * row &&
+                    (_this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_ONLYCLIENTAREA_GRIDSCROLL ||
+                    (_this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_IFCLIENTAREA_GRIDSCROLL && _this->bIsCursorOnSwitcher) ||
+                    _this->dwOriginalScrollWheelBehavior == SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_GRIDSCROLL)
                     )
                 {
-                    _this->direction = SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_BACKWARD;
+					bIsGridScrolling = TRUE;
+                }
 
-                    if (wParam != VK_UP || _this->layout.pWindowList.cbSize <= row)
+                if (!bIsGridScrolling)
+                {
+                    if (
+                        ((uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && (GetKeyState(VK_SHIFT) & 0x8000)) ||
+                        (uMsg == WM_HOTKEY && (LOWORD(lParam) & MOD_SHIFT)) ||
+                        ((uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && wParam == VK_LEFT) ||
+                        ((uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && wParam == VK_UP) ||
+                        (uMsg == WM_MOUSEWHEEL && (_this->bScrollWheelInvert ? GET_WHEEL_DELTA_WPARAM(wParam) < 0 : GET_WHEEL_DELTA_WPARAM(wParam) > 0))
+                        )
                     {
-                        if (_this->layout.iIndex == _this->layout.pWindowList.cbSize - 1)
+                        _this->direction = SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_BACKWARD;
+
+                        if (wParam != VK_UP || _this->layout.pWindowList.cbSize <= col)
                         {
-                            _this->layout.iIndex = 0;
+                            if (_this->layout.iIndex == _this->layout.pWindowList.cbSize - 1)
+                            {
+                                _this->layout.iIndex = 0;
+                            }
+                            else
+                            {
+                                _this->layout.iIndex++;
+                            }
                         }
-                        else
+                    }
+                    else
+                    {
+                        _this->direction = SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_FORWARD;
+
+                        if (wParam != VK_DOWN || _this->layout.pWindowList.cbSize <= col)
                         {
-                            _this->layout.iIndex++;
+                            if (_this->layout.iIndex == 0)
+                            {
+                                _this->layout.iIndex = _this->layout.pWindowList.cbSize - 1;
+                            }
+                            else
+                            {
+                                _this->layout.iIndex--;
+                            }
                         }
+                    }
+
+                    if (_this->direction == SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_FORWARD && _this->scrollDirection == _this->direction)
+                    {
+                        _this->layout.iFirstItemIndex -= col;
+                        if (_this->layout.iFirstItemIndex < 0)
+                        {
+                            _this->layout.iFirstItemIndex += _this->layout.pWindowList.cbSize;
+                        }
+                        _this->cwMask = 0;
+                        _this->cwIndex = -1;
+                        printf("[sws] new first item index after scroll down: %d\n", _this->layout.iFirstItemIndex);
+                    }
+                    else if (_this->direction == SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_BACKWARD && _this->scrollDirection == _this->direction)
+                    {
+                        _this->layout.iFirstItemIndex += col;
+                        if (_this->layout.iFirstItemIndex >= (int)_this->layout.pWindowList.cbSize)
+                        {
+                            _this->layout.iFirstItemIndex -= _this->layout.pWindowList.cbSize;
+                        }
+						_this->cwMask = 0;
+						_this->cwIndex = -1;
+                        printf("[sws] new first item index after scroll up: %d\n", _this->layout.iFirstItemIndex);
                     }
                 }
                 else
                 {
-                    _this->direction = SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_FORWARD;
-
-                    if (wParam != VK_DOWN || _this->layout.pWindowList.cbSize <= row)
+                    if (_this->bScrollWheelInvert ? GET_WHEEL_DELTA_WPARAM(wParam) < 0 : GET_WHEEL_DELTA_WPARAM(wParam) > 0)
                     {
-                        if (_this->layout.iIndex == 0)
-                        {
-                            _this->layout.iIndex = _this->layout.pWindowList.cbSize - 1;
-                        }
-                        else
-                        {
-                            _this->layout.iIndex--;
-                        }
+						_this->lastKey = VK_UP;
                     }
-                }
-
-                if (_this->direction == SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_FORWARD && _this->scrollDirection == _this->direction)
-                {
-                    _this->layout.iFirstItemIndex -= row;
-                    if (_this->layout.iFirstItemIndex < 0)
+                    else
                     {
-                        _this->layout.iFirstItemIndex += _this->layout.pWindowList.cbSize;
+                        _this->lastKey = VK_DOWN;
                     }
-                    printf("[sws] new first item index after scroll down: %d\n", _this->layout.iFirstItemIndex);
-                }
-                else if (_this->direction == SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_BACKWARD && _this->scrollDirection == _this->direction)
-                {
-                    _this->layout.iFirstItemIndex += row;
-                    if (_this->layout.iFirstItemIndex >= (int)_this->layout.pWindowList.cbSize)
-                    {
-                        _this->layout.iFirstItemIndex -= _this->layout.pWindowList.cbSize;
-                    }
-                    printf("[sws] new first item index after scroll up: %d\n", _this->layout.iFirstItemIndex);
                 }
 
                 _this->dwPaintFlags |= SWS_WINDOWSWITCHER_PAINTFLAGS_REDRAWENTIRE;
@@ -2423,24 +2371,96 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_RunMessageQueue(sws_WindowS
 void sws_WindowSwitcher_InitializeDefaultSettings(sws_WindowSwitcher* _this)
 {
     _this->dwShowDelay = SWS_WINDOWSWITCHER_SHOWDELAY;
-    _this->dwMaxWP = SWS_WINDOWSWITCHERLAYOUT_PERCENTAGEWIDTH;
-    _this->dwMaxHP = SWS_WINDOWSWITCHERLAYOUT_PERCENTAGEHEIGHT;
     _this->bIncludeWallpaper = SWS_WINDOWSWITCHERLAYOUT_INCLUDE_WALLPAPER;
-    _this->dwRowHeight = SWS_WINDOWSWITCHERLAYOUT_ROWHEIGHT;
-    _this->dwColorScheme = 0;
-    _this->dwTheme = SWS_WINDOWSWITCHER_THEME_NONE;
-    _this->dwCornerPreference = DWMWCP_ROUND;
     _this->bPrimaryOnly = FALSE;
     _this->bPerMonitor = FALSE;
-    _this->dwMaxAbsoluteWP = 0;
-    _this->dwMaxAbsoluteHP = 0;
     _this->bNoPerApplicationList = FALSE;
-    _this->dwMasterPadding = SWS_WINDOWSWITCHERLAYOUT_MASTER_PADDING_TOP;
     _this->dwWallpaperSupport = SWS_WALLPAPERSUPPORT_NONE;
     _this->bSwitcherIsPerApplication = FALSE;
     _this->bAlwaysUseWindowTitleAndIcon = FALSE;
     _this->dwScrollWheelBehavior = SWS_SCROLLWHEELBEHAVIOR_DISABLED;
     _this->bScrollWheelInvert = FALSE;
+	_this->dwGridColumns = SWS_WINDOWSWITCHERLAYOUT_DEFAULT_GRID_COLUMNS;
+	_this->dwGridRows = SWS_WINDOWSWITCHERLAYOUT_DEFAULT_GRID_ROWS;
+}
+
+void sws_WindowSwitcher_LoadSettings(sws_WindowSwitcher* _this)
+{
+    HKEY hKey;
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, SWS_REGISTRY_KEY, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        DWORD dwType, dwData, dwSize = sizeof(dwData);
+        if (RegQueryValueExW(hKey, L"ShowDelay", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->dwShowDelay = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"IncludeWallpaper", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bIncludeWallpaper = dwData;
+            _this->dwWallpaperSupport = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"PrimaryMonitorOnly", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bPrimaryOnly = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"PerMonitor", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bPerMonitor = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"NoPerApplicationList", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bNoPerApplicationList = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"SwitcherIsPerApplication", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bSwitcherIsPerApplication = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"AlwaysUseWindowTitleAndIcon", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bAlwaysUseWindowTitleAndIcon = dwData;
+        }
+        if (RegQueryValueExW(hKey, L"ScrollWheelBehavior", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            if (dwData > SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_GRIDSCROLL)
+            {
+                _this->dwScrollWheelBehavior = SWS_SCROLLWHEELBEHAVIOR_DISABLED;
+			}
+            else
+            {
+                _this->dwScrollWheelBehavior = dwData;
+            }
+        }
+        if (RegQueryValueExW(hKey, L"ScrollWheelInvert", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->bScrollWheelInvert = dwData;
+        }
+        RegCloseKey(hKey);
+    }
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+		WCHAR wszValue[16];
+        DWORD dwSize = sizeof(wszValue);
+        if (RegQueryValueExW(hKey, L"CoolSwitchColumns", NULL, NULL, (LPBYTE)wszValue, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->dwGridColumns = (UINT)_wtoi(wszValue);
+            if (_this->dwGridColumns < 1)
+            {
+                _this->dwGridColumns = SWS_WINDOWSWITCHERLAYOUT_DEFAULT_GRID_COLUMNS;
+            }
+        }
+        dwSize = sizeof(wszValue);
+        if (RegQueryValueExW(hKey, L"CoolSwitchRows", NULL, NULL, (LPBYTE)wszValue, &dwSize) == ERROR_SUCCESS)
+        {
+            _this->dwGridRows = (UINT)_wtoi(wszValue);
+            if (_this->dwGridRows < 1)
+            {
+                _this->dwGridRows = SWS_WINDOWSWITCHERLAYOUT_DEFAULT_GRID_ROWS;
+            }
+		}
+		printf("[sws] Loaded grid layout: %d rows x %d columns\n", _this->dwGridRows, _this->dwGridColumns);
+		RegCloseKey(hKey);  
+	}
 }
 
 __declspec(dllexport) void sws_WindowSwitcher_Clear(sws_WindowSwitcher* _this)
@@ -2488,8 +2508,6 @@ __declspec(dllexport) void sws_WindowSwitcher_Clear(sws_WindowSwitcher* _this)
         UnregisterClassW(_T(SWS_WINDOWSWITCHER_CLASSNAME), GetModuleHandle(NULL));
         DeleteObject(_this->hBackgroundBrush);
         DeleteObject(_this->hFlashBrush);
-        DeleteObject(_this->hCloseButtonBrush);
-        CloseThemeData(_this->hTheme);
         sws_WindowHelpers_Clear();
         if (_this->hrRo != S_FALSE)
         {
@@ -2519,7 +2537,7 @@ __declspec(dllexport) void sws_WindowSwitcher_Clear(sws_WindowSwitcher* _this)
     }
 }
 
-__declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitcher** __this, BOOL bWithRegMon)
+__declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitcher** __this)
 {
     sws_error_t rv = SWS_ERROR_SUCCESS;
     sws_WindowSwitcher* _this = NULL;
@@ -2618,10 +2636,8 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
     }
     if (!rv)
     {
-        _this->hBackgroundBrush = (HBRUSH)CreateSolidBrush(RGB(0, 0, 0));
-        _this->hFlashBrush = (HBRUSH)CreateSolidBrush(SWS_WINDOWSWITCHER_FLASH_COLOR);
-        _this->hCloseButtonBrush = (HBRUSH)CreateSolidBrush(SWS_WINDOWSWITCHER_CLOSE_COLOR);
-        _this->hTheme = OpenThemeData(NULL, _T(SWS_WINDOWSWITCHER_THEME_CLASS));
+        _this->hBackgroundBrush = (HBRUSH)CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+        _this->hFlashBrush = (HBRUSH)CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
         _this->last_change = 0;
         _this->bWallpaperAlwaysLast = SWS_WINDOWSWITCHERLAYOUT_WALLPAPER_ALWAYS_LAST;
         _this->mode = SWS_WINDOWSWITCHER_LAYOUTMODE_FULL;
@@ -2643,7 +2659,6 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
     }
     if (!rv)
     {
-        sws_WindowHelpers_PermitDarkMode(NULL);
         BufferedPaintInit();
         _this->hWnd = _sws_CreateWindowInBand(
             WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
@@ -2685,6 +2700,16 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
         {
             rv = sws_error_Report(sws_error_GetFromWin32Error(GetLastError()), NULL);
         }
+    }
+    if (!rv)
+    {
+        if (_this->bIsDynamic)
+        {
+            sws_WindowSwitcher_InitializeDefaultSettings(_this);
+            sws_WindowSwitcher_LoadSettings(_this);
+        }
+        BOOL bExcludedFromPeek = TRUE;
+        DwmSetWindowAttribute(_this->hWnd, DWMWA_EXCLUDED_FROM_PEEK, &bExcludedFromPeek, sizeof(BOOL));
     }
     if (!rv)
     {
@@ -2748,15 +2773,6 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
         rv = sws_error_GetFromHRESULT(_this->pAccPropServices->lpVtbl->SetHwndProp(_this->pAccPropServices, _this->hWndAccessible, OBJID_CLIENT, CHILDID_SELF, LiveSetting_Property_GUID, var));
     }
 
-    if (!rv)
-    {
-        if (_this->bIsDynamic)
-        {
-            sws_WindowSwitcher_InitializeDefaultSettings(_this);
-        }
-        BOOL bExcludedFromPeek = TRUE;
-        DwmSetWindowAttribute(_this->hWnd, DWMWA_EXCLUDED_FROM_PEEK, &bExcludedFromPeek, sizeof(BOOL));
-    }
     if (!rv)
     {
         if (_this->dwWallpaperSupport == SWS_WALLPAPERSUPPORT_EXPLORER)

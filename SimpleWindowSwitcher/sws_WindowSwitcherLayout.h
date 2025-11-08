@@ -3,8 +3,6 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <dwmapi.h>
-#pragma comment(lib, "Dwmapi.lib")
 #include <shellscalingapi.h>
 #pragma comment(lib, "Shcore.lib")
 #include "sws_def.h"
@@ -31,27 +29,6 @@ typedef struct _sws_WindowSwitcherLayout
 	int iIndex;
 	int iFirstItemIndex;
 	MONITORINFO mi;
-	unsigned int cbMaxHeight;
-	unsigned int cbMaxWidth;
-	unsigned int cbRowWidth;
-	unsigned int cbRowHeight;
-	unsigned int cbRowTitleHeight;
-	unsigned int cbMasterTopPadding;
-	unsigned int cbMasterBottomPadding;
-	unsigned int cbMasterLeftPadding;
-	unsigned int cbMasterRightPadding;
-	unsigned int cbElementTopPadding;
-	unsigned int cbElementBottomPadding;
-	unsigned int cbElementLeftPadding;
-	unsigned int cbElementRightPadding;
-	unsigned int cbTopPadding;
-	unsigned int cbBottomPadding;
-	unsigned int cbLeftPadding;
-	unsigned int cbRightPadding;
-	unsigned int cbHDividerPadding;
-	unsigned int cbVDividerPadding;
-	unsigned int cbThumbnailAvailableHeight;
-	unsigned int cbMaxTileWidth;
 	unsigned int numTopMost;
 	BOOL bIncludeWallpaper;
 	BOOL bWallpaperAlwaysLast;
@@ -59,6 +36,7 @@ typedef struct _sws_WindowSwitcherLayout
 	HWND hWndWallpaper;
 	HFONT hFontRegular;
 	unsigned int cbFontHeight;
+	unsigned int cbBorderSize;
 	long long timestamp;
 } sws_WindowSwitcherLayout;
 
@@ -66,7 +44,7 @@ static BOOL CALLBACK _sws_WindowSwitcherLayout_EnumWindowsCallback(_In_ HWND hWn
 
 sws_error_t sws_WindowSwitcherLayout_InvalidateLayout(sws_WindowSwitcherLayout* _this);
 
-sws_error_t sws_WindowSwitcherLayout_ComputeLayout(sws_WindowSwitcherLayout* _this, int direction, HWND hTarget);
+sws_error_t sws_WindowSwitcherLayout_ComputeLayout(sws_WindowSwitcherLayout* _this, int direction, HWND hTarget, UINT col, UINT maxRow);
 
 void sws_WindowSwitcherLayout_Clear(sws_WindowSwitcherLayout* _this);
 

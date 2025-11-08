@@ -21,8 +21,6 @@
 #include "sws_tshwnd.h"
 
 extern ULONG_PTR _sws_gdiplus_token;
-extern RTL_OSVERSIONINFOW sws_global_rovi;
-extern DWORD32 sws_global_ubr;
 
 // References:
 // RealEnumWindows: https://stackoverflow.com/questions/38205375/enumwindows-function-in-win10-enumerates-only-desktop-apps
@@ -246,12 +244,6 @@ wchar_t* sws_WindowHelpers_GetAUMIDForHWND(HWND hWnd);
 
 BOOL sws_WindowHelpers_IsValidMonitor(HMONITOR hMonitor, HDC unnamedParam2, LPRECT unnamedParam3, HMONITOR* pMonitor);
 
-sws_error_t sws_WindowHelpers_PermitDarkMode(HWND hWnd);
-
-sws_error_t sws_WindowHelpers_ShouldSystemUseDarkMode(DWORD* dwRes);
-
-sws_error_t sws_WindowHelpers_SetWindowBlur(HWND hWnd, int type, DWORD Color, DWORD Opacity);
-
 BOOL sws_WindowHelpers_IsTaskbarWindow(HWND hWnd, HWND hWndWallpaper);
 
 BOOL sws_WindowHelpers_IsAltTabWindow(HWND hwnd);
@@ -278,16 +270,16 @@ inline BOOL _sws_WindowHelpers_IsDesktopRaised()
 
 inline void _sws_WindowHelpers_ToggleDesktop()
 {
-	PostMessageW(FindWindowExW(NULL, NULL, L"Shell_TrayWnd", NULL), 0x579, 3 - _sws_WindowHelpers_IsDesktopRaised(), 0);
-	//PostMessageW(FindWindowExW(NULL, NULL, L"Shell_TrayWnd", NULL), WM_HOTKEY, 513, 0);
-	//PostMessageW(FindWindowExW(NULL, NULL, L"Shell_TrayWnd", NULL), 0x579, 3 - 1, 0); // 1 to restore
-	//PostMessageW(FindWindowExW(NULL, NULL, L"Shell_TrayWnd", NULL), 0x579, 3 - 0, 0); // 0 to show
+	keybd_event(VK_LMENU, 0, KEYEVENTF_KEYUP, 0); // ensure alt is up
+	keybd_event(VK_LWIN, 0, 0, 0);
+	keybd_event('D', 0, 0, 0);
+	keybd_event('D', 0, KEYEVENTF_KEYUP, 0);
+	keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
 }
 
 inline BOOL sws_WindowHelpers_IsWindowUWP(HWND hWnd)
 {
 	return sws_IsShellFrameWindow(hWnd);
-	return (GetPropW(hWnd, (LPCWSTR)0xA914));
 }
 
 BOOL CALLBACK sws_WindowHelpers_AddAltTabWindowsToTimeStampedHWNDList(HWND hWnd, HDPA hdpa);
@@ -295,91 +287,4 @@ BOOL CALLBACK sws_WindowHelpers_AddAltTabWindowsToTimeStampedHWNDList(HWND hWnd,
 BOOL sws_WindowHelpers_AreAnimationsAllowed();
 
 void sws_WindowHelpers_GetWindowText(HWND hWnd, LPCWSTR lpWStr, DWORD dwLength);
-
-#define SWS_OSVERSION_INVALID 0xffffffff
-
-typedef LONG NTSTATUS, * PNTSTATUS;
-#define STATUS_SUCCESS (0x00000000)
-
-typedef NTSTATUS(WINAPI* VnRtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
-
-// https://stackoverflow.com/questions/36543301/detecting-windows-10-version/36543774#36543774
-inline BOOL sws_WindowHelpers_GetOSVersion(PRTL_OSVERSIONINFOW lpRovi)
-{
-	HMODULE hMod = GetModuleHandleW(L"ntdll.dll");
-	if (hMod != NULL)
-	{
-		VnRtlGetVersionPtr fxPtr = (VnRtlGetVersionPtr)GetProcAddress(
-			hMod,
-			"RtlGetVersion"
-		);
-		if (fxPtr != NULL)
-		{
-			lpRovi->dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOW);
-			if (STATUS_SUCCESS == fxPtr(lpRovi))
-			{
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-
-// https://stackoverflow.com/questions/47926094/detecting-windows-10-os-build-minor-version
-inline DWORD32 sws_WindowHelpers_GetUBR()
-{
-	DWORD32 ubr = 0, ubr_size = sizeof(DWORD32);
-	HKEY hKey;
-	LONG lRes = RegOpenKeyExW(
-		HKEY_LOCAL_MACHINE,
-		wcschr(
-			wcschr(
-				wcschr(
-					UNIFIEDBUILDREVISION_KEY,
-					'\\'
-				) + 1,
-				'\\'
-			) + 1,
-			'\\'
-		) + 1,
-		0,
-		KEY_READ,
-		&hKey
-	);
-	if (lRes == ERROR_SUCCESS)
-	{
-		RegQueryValueExW(
-			hKey,
-			UNIFIEDBUILDREVISION_VALUE,
-			0,
-			NULL,
-			&ubr,
-			&ubr_size
-		);
-	}
-}
-
-inline DWORD32 sws_WindowHelpers_GetOSVersionAndUBR(PRTL_OSVERSIONINFOW lpRovi)
-{
-	if (!sws_WindowHelpers_GetOSVersion(lpRovi))
-	{
-		return SWS_OSVERSION_INVALID;
-	}
-	return sws_WindowHelpers_GetUBR();
-}
-
-inline BOOL sws_WindowHelpers_IsWindows11()
-{
-	if (!sws_global_rovi.dwMajorVersion) sws_global_ubr = sws_WindowHelpers_GetOSVersionAndUBR(&sws_global_rovi);
-	if (sws_global_rovi.dwBuildNumber >= 21996) return TRUE;
-	return FALSE;
-}
-
-inline HRESULT sws_WindowHelpers_SetMicaMaterialForThisWindow(HWND hWnd, BOOL bApply)
-{
-	if (!sws_WindowHelpers_IsWindows11()) return S_FALSE;
-	DWORD dwAttribute = (sws_global_rovi.dwBuildNumber >= 22523) ? 38 : DWMWA_MICA_EFFFECT;
-	DWORD dwProp = (bApply ? ((sws_global_rovi.dwBuildNumber >= 22523) ? 2 : 1) : 0);
-	return DwmSetWindowAttribute(hWnd, dwAttribute, &dwProp, sizeof(DWORD));
-}
 #endif

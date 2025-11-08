@@ -6,8 +6,8 @@
 ![Build status](https://github.com/valinet/sws/actions/workflows/build.yml/badge.svg)
 
 ## Example usage
-* Build `SimpleWindowSwitcher` and `sws-loader` projects, and run `sws-loader.exe` from command line.
-* Loading CWS inside Explorer.exe is also possible by using the `ep-sws-loader.wh.cpp` Windhawk mod from this repository, but it's not yet production ready and you must change the hardcoded path to `SimpleWindowSwitcher.dll` in the source code before compiling it.
+* Build `ClassicWindowSwitcher` and `cws-loader` projects, and run `ClassicWindowSwitcher.exe` from command line.
+* Loading CWS inside Explorer.exe is also possible by using the `cws-loader.wh.cpp` Windhawk mod from this repository, but it's not yet production ready and you must change the hardcoded path to `SimpleWindowSwitcher.dll` in the source code before compiling it.
 
 ## Compiling
 
@@ -58,10 +58,25 @@ Steps:
 
 That's it.
 
+## Registry Keys
+* `HKEY_CURRENT_USER\SOFTWARE\Ingan121\ClassicWindowSwitcher`
+* Everything here is `REG_DWORD`
 
-## TODO
-* Match item & window dimensions to that of classic switcher [OK]
-* Implement title display [OK]
-* Center icons if < 6 windows [OK]
-* Implement column number limit & scrolling [OK]
-* Read CoolSwitch setting from registry
+|Name|Description|Default Behavior|
+|----|-----------|-------|
+|`ShowDelay`|Set to the number of milliseconds to wait before showing the switcher.<br>Set to `0` to show the switcher immediately.|100 ms|
+|`IncludeWallpaper`|Set to `1` to include the 'show desktop' item at the end of the list.|Hidden (`0`)|
+|`PrimaryMonitorOnly`|Set to `1` to show the switcher only on the primary monitor.|Shown on the monitor where the mouse cursor is located (`0`)|
+|`PerMonitor`|Not implemented yet. Only show windows on the switcher's monitor?|Disabled (`0`)|
+|`NoPerApplicationList`|Set to `1` to disable the per-application window list, which is shown when `Alt+Tilde` is pressed.|Enabled (`0`)|
+|`SwitcherIsPerApplication`|Set to `1` to make the switcher only show a single entry per application.|Disabled (`0`)|
+|`AlwaysUseWindowTitleAndIcon`|Set to `1` to always use the window title and icon.|Disabled (`0`)|
+|`ScrollWheelBehavior`|Sets the behavior of the mouse scroll wheel when the switcher is open.<br>`0`: Disabled<br>`1`: Move selection item by item, only when the cursor is over the switcher.<br>`2`: Move selection item by item, regardless of cursor position.<br>`3`: Scroll the grid list, only when the cursor is over the switcher.<br>`4`: Scroll the grid list if the cursor is over the switcher, otherwise move selection item by item.<br>`5`: Scroll the grid list, regardless of cursor position.<br>If there are not enough items to scroll, the behavior falls back to item by item movement.|Disabled (`0`)|
+|`ScrollWheelInvert`|Set to `1` to invert the scroll wheel behavior.|Not inverted (`0`)|
+
+* `HKEY_CURRENT_USER\Contol Panel\Desktop`
+
+|Name|Type|Description|Default Behavior|
+|----|----|-----------|-------|
+|`CoolSwitchColumns`|REG_SZ|Set to the number of columns to use in the switcher grid.|7 columns|
+|`CoolSwitchRows`|REG_SZ|Set to the number of rows to use in the switcher grid.|3 rows|

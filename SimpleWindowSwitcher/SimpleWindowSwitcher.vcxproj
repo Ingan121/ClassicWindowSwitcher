@@ -32,6 +32,7 @@
     <ProjectGuid>{fcdc9e89-976e-40d0-a1d0-2bd773720742}</ProjectGuid>
     <RootNamespace>SimpleWindowSwitcher</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>ClassicWindowSwitcher</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -222,7 +223,6 @@
     <ClInclude Include="sws_dll.h" />
     <ClInclude Include="sws_error.h" />
     <ClInclude Include="sws_IconPainter.h" />
-    <ClInclude Include="sws_RegistryMonitor.h" />
     <ClInclude Include="sws_tshwnd.h" />
     <ClInclude Include="sws_utility.h" />
     <ClInclude Include="sws_vector.h" />

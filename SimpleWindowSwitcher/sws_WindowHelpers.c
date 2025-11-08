@@ -40,80 +40,6 @@ BOOL sws_WindowHelpers_IsValidMonitor(HMONITOR hMonitor, HDC unnamedParam2, LPRE
 	return TRUE;
 }
 
-sws_error_t sws_WindowHelpers_PermitDarkMode(HWND hWnd)
-{
-	if (_sws_SetPreferredAppMode && _sws_AllowDarkModeForWindow)
-	{
-		_sws_SetPreferredAppMode(TRUE);
-		if (hWnd)
-		{
-			_sws_AllowDarkModeForWindow(hWnd, TRUE);
-		}
-		return SWS_ERROR_SUCCESS;
-	}
-	else
-	{
-		return SWS_ERROR_NOT_INITIALIZED;
-	}
-}
-
-sws_error_t sws_WindowHelpers_RefreshImmersiveColorPolicyState()
-{
-	if (_sws_RefreshImmersiveColorPolicyState)
-	{
-		_sws_RefreshImmersiveColorPolicyState();
-		return SWS_ERROR_SUCCESS;
-	}
-	else
-	{
-		return SWS_ERROR_NOT_INITIALIZED;
-	}
-}
-
-sws_error_t sws_WindowHelpers_ShouldSystemUseDarkMode(DWORD* dwRes)
-{
-	RTL_OSVERSIONINFOW rovi;
-	if (sws_WindowHelpers_GetOSVersion(&rovi) && rovi.dwBuildNumber < 18985)
-	{
-		*dwRes = TRUE;
-		return SWS_ERROR_SUCCESS;
-	}
-	if (_sws_ShouldSystemUseDarkMode)
-	{
-		if (dwRes)
-		{
-			*dwRes = _sws_ShouldSystemUseDarkMode();
-			return SWS_ERROR_SUCCESS;
-		}
-		else
-		{
-			return SWS_ERROR_INVALID_PARAMETER;
-		}
-	}
-	else
-	{
-		return SWS_ERROR_NOT_INITIALIZED;
-	}
-}
-
-sws_error_t sws_WindowHelpers_SetWindowBlur(HWND hWnd, int type, DWORD Color, DWORD Opacity)
-{
-	ACCENTPOLICY policy;
-	policy.nAccentState = type;
-	policy.nFlags = 0;
-	policy.nColor = (Opacity << 24) | (Color & 0xFFFFFF); // ACCENT_ENABLE_BLURBEHIND=3... // Color = 0XB32E9A
-	policy.nFlags = 0;
-	WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) }; // WCA_ACCENT_POLICY=19
-	if (_sws_SetWindowCompositionAttribute)
-	{
-		_sws_SetWindowCompositionAttribute(hWnd, &data);
-	}
-	else
-	{
-		return SWS_ERROR_NOT_INITIALIZED;
-	}
-}
-
 HWND* _sws_WindowHelpers_Gui_BuildWindowList
 (
 	NtUserBuildHwndList pNtUserBuildHwndList,
@@ -772,11 +698,6 @@ sws_error_t sws_WindowHelpers_Initialize()
 	if (_sws_gdiplus_token)
 	{
 		return rv;
-	}
-	sws_global_ubr = sws_WindowHelpers_GetOSVersionAndUBR(&sws_global_rovi);
-	if (sws_global_rovi.dwMajorVersion == 0)
-	{
-		return SWS_ERROR_GENERIC_ERROR;
 	}
 	GetSystemTimeAsFileTime(&sws_ancient_ft);
 	GetSystemTimeAsFileTime(&sws_start_ft);

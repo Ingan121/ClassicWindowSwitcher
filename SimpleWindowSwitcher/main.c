@@ -11,24 +11,35 @@
 #include "sws_WindowSwitcher.h"
 
 BOOL g_bIsDesktopRaised = FALSE;
+sws_WindowSwitcher* g_sws_WindowSwitcher = NULL;
+HMODULE g_hInstDLL = NULL;
 
-__declspec(dllexport) sws_error_t main(DWORD unused)
+__declspec(dllexport) sws_error_t sws_main(DWORD unused)
 {
 	sws_error_t rv = SWS_ERROR_SUCCESS;
-    void* sws = NULL;
 
 	if (!rv)
 	{
-		rv = sws_WindowSwitcher_Initialize(&sws, FALSE);
+		rv = sws_WindowSwitcher_Initialize(&g_sws_WindowSwitcher);
 	}
 	if (!rv)
 	{
-		rv = sws_WindowSwitcher_RunMessageQueue(sws);
+		rv = sws_WindowSwitcher_RunMessageQueue(g_sws_WindowSwitcher);
 	}
 	if (!rv)
 	{
-		sws_WindowSwitcher_Clear(sws);
+		sws_WindowSwitcher_Clear(g_sws_WindowSwitcher);
 	}
+	return rv;
+}
+
+__declspec(dllexport) sws_error_t sws_unload()
+{
+    sws_error_t rv = SWS_ERROR_SUCCESS;
+    if (g_sws_WindowSwitcher)
+    {
+		PostMessageW(g_sws_WindowSwitcher->hWnd, WM_CLOSE, 0, 0);
+    }
 	return rv;
 }
 
@@ -41,6 +52,7 @@ BOOL WINAPI DllMain(
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
+		g_hInstDLL = hinstDLL;
         DisableThreadLibraryCalls(hinstDLL);
         wchar_t exeName[MAX_PATH];
         GetProcessImageFileNameW(
