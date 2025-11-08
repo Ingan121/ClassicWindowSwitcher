@@ -8,38 +8,22 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 int main(int argc, char** argv)
 {
 	HMODULE hModule = LoadLibraryW(L"ClassicWindowSwitcher.dll");
-	if (!hModule) {
-		if (argc == -1)
-		{
-			MessageBoxW(NULL, L"Failed to load ClassicWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
-		}
+	if (!hModule)
+	{
 		printf("Failed to load ClassicWindowSwitcher.dll\n");
 		return 1;
 	}
 	void* main = GetProcAddress(hModule, "sws_main");
-	if (main) {
+	if (main)
+	{
 		((void(*)(DWORD))main)(0);
 	}
 	else
 	{
-		if (argc == -1)
-		{
-			MessageBoxW(NULL, L"Failed to load ClassicWindowSwitcher.dll", L"Error", MB_OK | MB_ICONERROR);
-		}
 		printf("Failed to find main function in ClassicWindowSwitcher.dll\n");
 		FreeLibrary(hModule);
 		return 1;
 	}
 	FreeLibrary(hModule);
 	return 0;
-}
-
-int WINAPI WinMain(
-	_In_ HINSTANCE hInstance,
-	_In_ HINSTANCE hPrevInstance,
-	_In_ LPSTR     lpCmdLine,
-	_In_ int       nCmdShow
-)
-{
-	return main(-1, NULL);
 }

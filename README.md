@@ -7,7 +7,9 @@
 
 ## Example usage
 * Build `ClassicWindowSwitcher` and `cws-loader` projects, and run `ClassicWindowSwitcher.exe` from command line.
-* Loading CWS inside Explorer.exe is also possible by using the `cws-loader.wh.cpp` Windhawk mod from this repository, but it's not yet production ready and you must change the hardcoded path to `SimpleWindowSwitcher.dll` in the source code before compiling it.
+* Loading CWS inside Explorer.exe is also possible by using the `cws-loader.wh.cpp` Windhawk mod from this repository. You must change the DLL path in the mod settings to point to your compiled `ClassicWindowSwitcher.dll`.
+* You can also put the compiled DLL as `C:\Windows\dxgi.dll` to have it loaded by Explorer.exe automatically on every launch, replacing the default Windows Alt+Tab switcher.
+* Note that you must disable the default Windows Alt+Tab switcher by setting `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AltTabSettings` to `0` (DWORD) for the standalone CWS executable to work properly.
 
 ## Compiling
 
@@ -73,6 +75,7 @@ That's it.
 |`AlwaysUseWindowTitleAndIcon`|Set to `1` to always use the window title and icon.|Disabled (`0`)|
 |`ScrollWheelBehavior`|Sets the behavior of the mouse scroll wheel when the switcher is open.<br>`0`: Disabled<br>`1`: Move selection item by item, only when the cursor is over the switcher.<br>`2`: Move selection item by item, regardless of cursor position.<br>`3`: Scroll the grid list, only when the cursor is over the switcher.<br>`4`: Scroll the grid list if the cursor is over the switcher, otherwise move selection item by item.<br>`5`: Scroll the grid list, regardless of cursor position.<br>If there are not enough items to scroll, the behavior falls back to item by item movement.|Disabled (`0`)|
 |`ScrollWheelInvert`|Set to `1` to invert the scroll wheel behavior.|Not inverted (`0`)|
+|`SkipIfOneWindow`|Set to `1` to skip showing the switcher and immediately switch to the only window if there is just one window to switch to.|Enabled (`1`)|
 
 * `HKEY_CURRENT_USER\Contol Panel\Desktop`
 
