@@ -13,7 +13,7 @@
 // ==WindhawkModReadme==
 /*
 # ClassicWindowSwitcher Loader
-* Build [ClassicWindowSwitcher](https://github.com/Ingan121/ClassicWindowSwitcher/), and put the DLL path in the mod settings.
+* Build or download [ClassicWindowSwitcher](https://github.com/Ingan121/ClassicWindowSwitcher/), and put the DLL path in the mod settings.
 */
 // ==/WindhawkModReadme==
 
