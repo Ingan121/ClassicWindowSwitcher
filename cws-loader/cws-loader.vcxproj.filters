@@ -34,4 +34,7 @@
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="cws.manifest" />
+  </ItemGroup>
 </Project>

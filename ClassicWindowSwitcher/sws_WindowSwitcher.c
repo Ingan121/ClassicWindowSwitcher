@@ -2639,14 +2639,7 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
             rv = sws_error_Report(sws_error_GetFromWin32Error(GetLastError()), NULL);
         }
     }
-    if (!rv)
-    {
-        rv = DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-        if (rv)
-        {
-			printf("[sws] Failed to set DPI awareness context to Per Monitor Aware V2.\n");
-        }
-    }
+    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     if (!rv)
     {
         rv = sws_error_Report(sws_error_GetFromInternalError(_sws_WindowSwitcher_RegisterWindowClass(_this)), NULL);
