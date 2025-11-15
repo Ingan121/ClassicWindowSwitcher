@@ -2037,7 +2037,7 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
         if ((uMsg == WM_LBUTTONUP || uMsg == WM_MBUTTONUP) ?
             (
                 i = _this->cwIndex,
-                bShouldClose = (uMsg == WM_MBUTTONUP ? 1 : (_this->cwMask & SWS_WINDOWFLAG_IS_ON_CLOSE)),
+                bShouldClose = uMsg == WM_MBUTTONUP,
                 i >= 0 && i < _this->layout.pWindowList.cbSize &&
                 GET_X_LPARAM(lParam) > pWindowList[i].rcWindow.left &&
                 GET_X_LPARAM(lParam) < pWindowList[i].rcWindow.right &&
@@ -2057,13 +2057,6 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
                 _sws_WindowSwitcher_SwitchToSelectedItemAndDismiss(_this);
                 return 0;
             }
-            /*if (_this->hLastClosedWnds)
-            {
-                DPA_Destroy(_this->hLastClosedWnds);
-                _this->hLastClosedWnds = NULL;
-            }
-            _this->hLastClosedWnds = DPA_Create(SWS_VECTOR_CAPACITY);
-            DPA_Clone(pWindowList[i].dpaGroupedWnds, _this->hLastClosedWnds);*/
             for (unsigned j = 0; j < DPA_GetPtrCount(pWindowList[i].dpaGroupedWnds/*_this->hLastClosedWnds*/); ++j)
             {
                 HWND hWnd = DPA_FastGetPtr(pWindowList[i].dpaGroupedWnds/*_this->hLastClosedWnds*/, j);
@@ -2649,6 +2642,10 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
     if (!rv)
     {
         rv = DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        if (rv)
+        {
+			printf("[sws] Failed to set DPI awareness context to Per Monitor Aware V2.\n");
+        }
     }
     if (!rv)
     {

@@ -7,23 +7,6 @@
 
 DEFINE_GUID(LiveSetting_Property_GUID, 0xc12bcd8e, 0x2a8e, 0x4950, 0x8a, 0xe7, 0x36, 0x25, 0x11, 0x1d, 0x58, 0xeb);
 
-#ifndef NTDDI_WIN10_CO
-#define DWMWA_USE_HOSTBACKDROPBRUSH 17            // [set] BOOL, Allows the use of host backdrop brushes for the window.
-#define DWMWA_USE_IMMERSIVE_DARK_MODE 20          // [set] BOOL, Allows a window to either use the accent color, or dark, according to the user Color Mode preferences.
-#define DWMWA_WINDOW_CORNER_PREFERENCE 33         // [set] WINDOW_CORNER_PREFERENCE, Controls the policy that rounds top-level window corners
-#define DWMWA_BORDER_COLOR 34                     // [set] COLORREF, The color of the thin border around a top-level window
-#define DWMWA_CAPTION_COLOR 35                    // [set] COLORREF, The color of the caption
-#define DWMWA_TEXT_COLOR 36                       // [set] COLORREF, The color of the caption text
-#define DWMWA_VISIBLE_FRAME_BORDER_THICKNESS 37   // [get] UINT, width of the visible border around a thick frame window
-
-#define DWMWCP_DEFAULT 0
-#define DWMWCP_DONOTROUND 1
-#define DWMWCP_ROUND 2
-#define DWMWCP_ROUNDSMALL 3
-#endif
-
-#define DWMWA_MICA_EFFFECT 1029
-
 #define DEFAULT_DPI_X 96.0
 #define DEFAULT_DPI_Y 96.0
 
@@ -35,8 +18,6 @@ DEFINE_GUID(LiveSetting_Property_GUID, 0xc12bcd8e, 0x2a8e, 0x4950, 0x8a, 0xe7, 0
 #define SWS_WINDOWSWITCHER_THEME_INDEX 8
 
 #define SWS_WINDOWFLAG_IS_ON_WINDOW    0b001
-#define SWS_WINDOWFLAG_IS_ON_THUMBNAIL 0b010
-#define SWS_WINDOWFLAG_IS_ON_CLOSE     0b100
 
 #define SWS_CONTOUR_INNER 1
 #define SWS_CONTOUR_OUTER -1
