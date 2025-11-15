@@ -22,6 +22,7 @@
 
 typedef struct _sws_WindowSwitcher
 {
+	DWORD dwInitFlags;
     BOOL bIsDynamic;
     HRESULT hrCo;
     HRESULT hrRo;
@@ -59,7 +60,6 @@ typedef struct _sws_WindowSwitcher
     UINT opacity;
     HANDLE hShowThread;
     HANDLE hShowSignal;
-    BOOL bNoPerApplicationListPrevious;
     BOOL bIsInitialized;
     HWND hWndAccessible;
     IAccPropServices* pAccPropServices;
@@ -119,7 +119,7 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_RunMessageQueue(sws_WindowS
 
 __declspec(dllexport) void sws_WindowSwitcher_Clear(sws_WindowSwitcher* _this);
 
-__declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitcher** __this);
+__declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitcher** __this, DWORD initFlags);
 
 void sws_WindowSwitcher_Paint(sws_WindowSwitcher* _this, DWORD dwFlags);
 

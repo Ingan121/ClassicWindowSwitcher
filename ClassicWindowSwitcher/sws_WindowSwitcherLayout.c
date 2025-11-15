@@ -124,8 +124,8 @@ sws_error_t sws_WindowSwitcherLayout_ComputeLayout(sws_WindowSwitcherLayout* _th
 
 		if (!_this->iWidth)
 		{
-			_this->iWidth = col * SWS_WINDOWSWITCHERLAYOUT_ITEMSIZE + 23 + _this->cbBorderSize * 6;
-			_this->iHeight = row * SWS_WINDOWSWITCHERLAYOUT_ITEMSIZE + 32 + _this->cbFontHeight * 5 / 2;
+			_this->iWidth = col * SWS_WINDOWSWITCHERLAYOUT_ITEMSIZE * (_this->cbDpiX / DEFAULT_DPI_X) + 23 * (_this->cbDpiX / DEFAULT_DPI_X) + _this->cbBorderSize * 6;
+			_this->iHeight = row * SWS_WINDOWSWITCHERLAYOUT_ITEMSIZE * (_this->cbDpiX / DEFAULT_DPI_X) + 32 * (_this->cbDpiX / DEFAULT_DPI_X) + _this->cbFontHeight * 5 / 2;
 			_this->iX = ((_this->mi.rcWork.right - _this->mi.rcWork.left) - _this->iWidth) / 2 + _this->mi.rcWork.left;
 			_this->iY = ((_this->mi.rcWork.bottom - _this->mi.rcWork.top) - _this->iHeight) / 2 + _this->mi.rcWork.top;
 			//printf("height: %d, cbCurrentTop: %d, %f %f %f\n", _this->iHeight, cbCurrentTop, _this->cbThumbnailAvailableHeight, _this->cbBottomPadding, _this->cbPadding);
@@ -334,7 +334,7 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 				double factor = SWS_UWP_ICON_SCALE_FACTOR;
 				pWindowList[iCurrentWindow].rcIcon.left = 0;
 				pWindowList[iCurrentWindow].rcIcon.top = 0;
-				pWindowList[iCurrentWindow].rcIcon.right = 32;
+				pWindowList[iCurrentWindow].rcIcon.right = SWS_WINDOWSWITCHERLAYOUT_ICONSIZE * (_this->cbDpiX / DEFAULT_DPI_X);
 				pWindowList[iCurrentWindow].rcIcon.bottom = pWindowList[iCurrentWindow].rcIcon.right;
 				pWindowList[iCurrentWindow].szIcon = pWindowList[iCurrentWindow].rcIcon.right;
 				pWindowList[iCurrentWindow].hIcon = sws_DefAppIcon;
@@ -345,7 +345,7 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 	{
 		NONCLIENTMETRICS ncm;
 		ncm.cbSize = sizeof(NONCLIENTMETRICS);
-		SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
+		SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0, _this->cbDpiX);
 
 		_this->cbBorderSize = ncm.iBorderWidth;
 

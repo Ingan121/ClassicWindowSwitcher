@@ -722,15 +722,15 @@ sws_error_t sws_WindowHelpers_Initialize()
 		sws_LoadIconWithScaleDown(
 			(HINSTANCE)NULL,
 			(PCWSTR)MAKEINTRESOURCEW(IDI_APPLICATION),
-			(int)128,
-			(int)128,
+			(int)32,
+			(int)32,
 			(HICON*)(&(sws_DefAppIcon))
 		);
 		sws_LoadIconWithScaleDown(
 			(HINSTANCE)NULL,
 			(PCWSTR)MAKEINTRESOURCEW(IDI_APPLICATION),
-			(int)128,
-			(int)128,
+			(int)32,
+			(int)32,
 			(HICON*)(&(sws_LegacyDefAppIcon))
 		);
 		//sws_LegacyDefAppIcon = LoadIconW(NULL, MAKEINTRESOURCEW(IDI_APPLICATION));

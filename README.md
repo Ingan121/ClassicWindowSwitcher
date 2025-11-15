@@ -1,6 +1,6 @@
 # Classic Window Switcher
 * Classic Window Switcher (cws) is a reimplementation of the classic CSRSS Windows Alt+Tab window switcher, designed to work on modern versions of Windows, including Windows 11 24H2 and later.
-* Also, it features more modern features, such as UWP icon support, richer navigation with mouse and arrow keys, and more.
+* Also, it features more modern features, such as UWP icon support, richer navigation with mouse and arrow keys, better HiDPI support, and more.
 * Based on the Simple Window Switcher (sws) from ExplorerPatcher by Valinet.
 
 ![Build status](https://github.com/valinet/sws/actions/workflows/build.yml/badge.svg)
@@ -73,7 +73,7 @@ That's it.
 |`NoPerApplicationList`|Set to `1` to disable the per-application window list, which is shown when `Alt+Tilde` is pressed.|Enabled (`0`)|
 |`SwitcherIsPerApplication`|Set to `1` to make the switcher only show a single entry per application.|Disabled (`0`)|
 |`AlwaysUseWindowTitleAndIcon`|Set to `1` to always use the window title and icon.|Disabled (`0`)|
-|`ScrollWheelBehavior`|Sets the behavior of the mouse scroll wheel when the switcher is open.<br>`0`: Disabled<br>`1`: Move selection item by item, only when the cursor is over the switcher.<br>`2`: Move selection item by item, regardless of cursor position.<br>`3`: Scroll the grid list, only when the cursor is over the switcher.<br>`4`: Scroll the grid list if the cursor is over the switcher, otherwise move selection item by item.<br>`5`: Scroll the grid list, regardless of cursor position.<br>If there are not enough items to scroll, the behavior falls back to item by item movement.|Disabled (`0`)|
+|`ScrollWheelBehavior`|Sets the behavior of the mouse scroll wheel when the switcher is open.<br>`0`: Disabled<br>`1`: Move selection item by item, only when the cursor is over the switcher.<br>`2`: Move selection item by item, regardless of cursor position.<br>`3`: Scroll the grid list, only when the cursor is over the switcher.<br>`4`: Scroll the grid list if the cursor is over the switcher, otherwise move selection item by item.<br>`5`: Scroll the grid list, regardless of cursor position.<br>`6`: Move selection item by item if the cursor is over the switcher, otherwise scroll the grid list.<br>If there are not enough items to scroll, the behavior falls back to item by item movement.|Disabled (`0`)|
 |`ScrollWheelInvert`|Set to `1` to invert the scroll wheel behavior.|Not inverted (`0`)|
 |`SkipIfOneWindow`|Set to `1` to skip showing the switcher and immediately switch to the only window if there is just one window to switch to.|Enabled (`1`)|
 

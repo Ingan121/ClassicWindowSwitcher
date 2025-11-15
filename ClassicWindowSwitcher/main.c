@@ -13,13 +13,13 @@
 BOOL g_bIsDesktopRaised = FALSE;
 sws_WindowSwitcher* g_sws_WindowSwitcher = NULL;
 
-__declspec(dllexport) sws_error_t sws_main(DWORD unused)
+__declspec(dllexport) sws_error_t sws_main(DWORD initFlags)
 {
 	sws_error_t rv = SWS_ERROR_SUCCESS;
 
 	if (!rv)
 	{
-		rv = sws_WindowSwitcher_Initialize(&g_sws_WindowSwitcher);
+		rv = sws_WindowSwitcher_Initialize(&g_sws_WindowSwitcher, initFlags);
 	}
 	if (!rv)
 	{
@@ -40,6 +40,11 @@ __declspec(dllexport) sws_error_t sws_unload()
 		PostMessageW(g_sws_WindowSwitcher->hWnd, WM_CLOSE, 0, 0);
     }
 	return rv;
+}
+
+__declspec(dllexport) sws_WindowSwitcher* sws_getInstance()
+{
+	return g_sws_WindowSwitcher;
 }
 
 BOOL WINAPI DllMain(
