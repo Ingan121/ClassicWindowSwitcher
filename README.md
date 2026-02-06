@@ -9,7 +9,7 @@
 * Build `ClassicWindowSwitcher` and `cws-loader` projects, and run `ClassicWindowSwitcher.exe` from command line.
 * Loading CWS inside Explorer.exe is also possible by using the `cws-loader.wh.cpp` Windhawk mod from this repository. You must change the DLL path in the mod settings to point to your path of `ClassicWindowSwitcher.dll`.
 * You can also put the CWS DLL as `C:\Windows\dxgi.dll` to have it loaded by Explorer.exe automatically on every launch, replacing the default Windows Alt+Tab switcher.
-* Note that you must disable the default Windows Alt+Tab switcher by setting `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AltTabSettings` to `0` (DWORD) for the standalone CWS executable to work properly.
+* Note that you must disable the default Windows Alt+Tab switcher by setting `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AltTabSettings` to `1` (DWORD) for the standalone CWS executable to work properly.
 
 ## Compiling
 
