@@ -1551,6 +1551,10 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
         _this->dwPaintFlags |= wParam;
         RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT);
     }
+    else if (uMsg == SWS_WINDOWSWITCHER_RELOAD_CONFIG_MSG)
+    {
+        sws_WindowSwitcher_LoadSettings(_this);
+    }
     else if (uMsg == WM_ERASEBKGND)
     {
         return 0;
