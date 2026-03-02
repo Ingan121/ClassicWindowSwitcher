@@ -3,7 +3,7 @@
 // @name            ClassicWindowSwitcher Loader
 // @description     Load ClassicWindowSwitcher
 // @version         0.7
-// @author          Ingan121 (patched)
+// @author          Ingan121
 // @github          https://github.com/Ingan121
 // @twitter         https://twitter.com/Ingan121
 // @homepage        https://www.ingan121.com/
@@ -12,7 +12,11 @@
 // ==/WindhawkMod==
 
 // ==WindhawkModSettings==
-/*...*/
+/*
+- dllpath: ""
+  $name: DLL Path
+  $description: Full path to ClassicWindowSwitcher DLL (e.g., C:\Tools\ClassicWindowSwitcher.dll)
+*/
 // ==/WindhawkModSettings==
 
 #include <windows.h>
