@@ -90,6 +90,8 @@ typedef struct _sws_WindowSwitcher
     DWORD bScrollWheelInvert;
 	DWORD dwGridColumns;
     DWORD dwGridRows;
+
+	wchar_t wszVersionString[32];
 } sws_WindowSwitcher;
 
 typedef struct _sws_WindowSwitcher_EndTaskThreadParams

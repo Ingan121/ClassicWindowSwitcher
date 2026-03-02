@@ -3,6 +3,8 @@
 #define UNICODE
 #include <Windows.h>
 
+#define SWS_VER L"1.2"
+
 #define SWS_GUID_TEXTUAL "{BEA057BB-66C7-4758-A610-FAE6013E9F98}"
 
 DEFINE_GUID(LiveSetting_Property_GUID, 0xc12bcd8e, 0x2a8e, 0x4950, 0x8a, 0xe7, 0x36, 0x25, 0x11, 0x1d, 0x58, 0xeb);

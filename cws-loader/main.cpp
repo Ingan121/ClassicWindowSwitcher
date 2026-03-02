@@ -43,6 +43,12 @@ long long CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessageW(hDlg, IDC_WHEELCOMBO, CB_ADDSTRING, 0, (LPARAM)L"Grid scroll on hover else seek items");
 		SendDlgItemMessageW(hDlg, IDC_WHEELCOMBO, CB_ADDSTRING, 0, (LPARAM)L"Grid Scroll (Full screen)");
 		SendDlgItemMessageW(hDlg, IDC_WHEELCOMBO, CB_ADDSTRING, 0, (LPARAM)L"Seek items on hover else grid scroll");
+
+		HWND hInfoText = GetDlgItem(hDlg, IDC_INFOTEXT);
+		wchar_t infoStrFormat[256] = {}, infoStr[256] = {};
+		GetWindowTextW(hInfoText, infoStrFormat, 256);
+		swprintf_s(infoStr, 256, infoStrFormat, SWS_VER);
+		SetWindowTextW(hInfoText, infoStr);
 	} break;
 	case WM_TRAY: {
 		switch (LOWORD(lParam))
@@ -51,9 +57,18 @@ long long CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			POINT pt;
 			GetCursorPos(&pt);
-			HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_TRAY));
+			HMENU hMenu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_TRAY));
 			if (hMenu) {
 				HMENU hSubMenu = GetSubMenu(hMenu, 0);
+				wchar_t infoStrFormat[256] = {}, infoStr[256] = {};
+				GetMenuStringW(hSubMenu, 0, infoStrFormat, 256, MF_BYPOSITION);
+				swprintf_s(infoStr, 256, infoStrFormat, SWS_VER);
+				MENUITEMINFOW mii = {};
+				mii.cbSize = sizeof(MENUITEMINFOW);
+				mii.fMask = MIIM_STRING;
+				mii.dwTypeData = infoStr;
+				mii.cch = wcslen(infoStr);
+				SetMenuItemInfoW(hSubMenu, 0, TRUE, &mii);
 				SetForegroundWindow(hDlg); // Workaround for menu not disappearing bug
 				TrackPopupMenu(hSubMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
 			}

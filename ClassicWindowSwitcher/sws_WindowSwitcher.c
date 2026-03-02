@@ -2723,15 +2723,20 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
     if (!rv)
     {
         rv = sws_error_GetFromHRESULT(CoCreateInstance(&sws_CLSID_InputSwitchControl, NULL, CLSCTX_INPROC_SERVER, &sws_IID_InputSwitchControl, &(_this->pInputSwitchControl)));
-    }
-    if (!rv)
-    {
-        rv = sws_error_GetFromHRESULT(_this->pInputSwitchControl->lpVtbl->Init(_this->pInputSwitchControl, 100));
-    }
-    if (!rv)
-    {
-        _this->InputSwitchCallback.lpVtbl = &_sws_WindowSwitcher_InputSwitchCallbackVtbl;
-        rv = sws_error_GetFromHRESULT(_this->pInputSwitchControl->lpVtbl->SetCallback(_this->pInputSwitchControl, &(_this->InputSwitchCallback)));
+        if (!rv)
+        {
+            rv = sws_error_GetFromHRESULT(_this->pInputSwitchControl->lpVtbl->Init(_this->pInputSwitchControl, 100));
+        }
+        if (!rv)
+        {
+            _this->InputSwitchCallback.lpVtbl = &_sws_WindowSwitcher_InputSwitchCallbackVtbl;
+            rv = sws_error_GetFromHRESULT(_this->pInputSwitchControl->lpVtbl->SetCallback(_this->pInputSwitchControl, &(_this->InputSwitchCallback)));
+        }
+        if (rv)
+        {
+            // Make missing InputSwitch.dll not a critical error
+            rv = 0;
+        }
     }
     if (!rv)
     {
@@ -2796,6 +2801,7 @@ __declspec(dllexport) sws_error_t sws_WindowSwitcher_Initialize(sws_WindowSwitch
     if (!rv)
     {
         _this->bIsInitialized = TRUE;
+		wcscpy_s(_this->wszVersionString, 32, SWS_VER);
     }
 
     if (rv && (*__this) && (*__this)->bIsDynamic)
