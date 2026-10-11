@@ -28,11 +28,18 @@ sws_error_t sws_window_Initialize(sws_window* _this, HWND hWnd)
 	}
 	if (!rv)
 	{
-		HWND hWndOfInterest = _sws_HungWindowFromGhostWindow(hWnd);
-		if (!hWndOfInterest) hWndOfInterest = hWnd;
+		HWND hWndOfInterest = hWnd;
+		if (_sws_HungWindowFromGhostWindow)
+		{
+			HWND hWndGhost = _sws_HungWindowFromGhostWindow(hWnd);
+			if (hWndGhost)
+			{
+				hWndOfInterest = hWndGhost;
+			}
+		}
 		if (!GetWindowThreadProcessId(hWndOfInterest, &(_this->dwProcessId)))
 		{
-			rv = sws_error_GetFromWin32Error(GetLastError());
+			rv = HRESULT_FROM_WIN32(GetLastError());
 		}
 	}
 	if (!rv)

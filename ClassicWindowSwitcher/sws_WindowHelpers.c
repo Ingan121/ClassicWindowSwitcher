@@ -61,7 +61,7 @@ BOOL _sws_IsReallyVisible(HWND hWnd)
 
 BOOL _sws_IsGhosted(HWND hwnd)
 {
-	return _sws_GhostWindowFromHungWindow(hwnd) != NULL;
+	return _sws_GhostWindowFromHungWindow && _sws_GhostWindowFromHungWindow(hwnd) != NULL;
 }
 
 BOOL _sws_ShouldListWindowInAltTab(HWND hwnd)
@@ -206,7 +206,7 @@ BOOL CALLBACK sws_WindowHelpers_AddAltTabWindowsToTimeStampedHWNDList(HWND hWnd,
 
 BOOL sws_WindowHelpers_AreAnimationsAllowed()
 {
-	if (sws_SHWindowsPolicy(&POLID_TurnOffSPIAnimations))
+	if (sws_SHWindowsPolicy && sws_SHWindowsPolicy(&POLID_TurnOffSPIAnimations))
 	{
 		return FALSE;
 	}
