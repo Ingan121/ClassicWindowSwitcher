@@ -95,29 +95,10 @@ long long CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDAPPLY:
 		{
 			SaveSettings(hDlg);
-			if (g_pSwitcher)
+			HWND existingSwitcher = FindWindowA(SWS_WINDOWSWITCHER_CLASSNAME, NULL);
+			if (existingSwitcher)
 			{
-				g_pSwitcher->bIncludeWallpaper = IsDlgButtonChecked(hDlg, IDC_INCLUDEWP);
-				g_pSwitcher->dwWallpaperSupport = g_pSwitcher->bIncludeWallpaper ? SWS_WALLPAPERSUPPORT_EXPLORER : SWS_WALLPAPERSUPPORT_NONE;
-				g_pSwitcher->bPrimaryOnly = IsDlgButtonChecked(hDlg, IDC_PRIMARYONLY);
-				g_pSwitcher->bPerMonitor = IsDlgButtonChecked(hDlg, IDC_PERMONITOR);
-				g_pSwitcher->bNoPerApplicationList = IsDlgButtonChecked(hDlg, IDC_NO_PERAPP_LIST);
-				g_pSwitcher->bSwitcherIsPerApplication = IsDlgButtonChecked(hDlg, IDC_PERAPP);
-				g_pSwitcher->bAlwaysUseWindowTitleAndIcon = IsDlgButtonChecked(hDlg, IDC_ALWAYS_WIN_TITLE);
-				g_pSwitcher->bScrollWheelInvert = IsDlgButtonChecked(hDlg, IDC_INVWHEEL);
-				g_pSwitcher->bSkipIfOneWindow = IsDlgButtonChecked(hDlg, IDC_SKIPIFONE);
-				g_pSwitcher->dwShowDelay = GetDlgItemInt(hDlg, IDC_SHOWDELAY, NULL, FALSE);
-				g_pSwitcher->dwGridColumns = GetDlgItemInt(hDlg, IDC_COLUMN, NULL, FALSE);
-				g_pSwitcher->dwGridRows = GetDlgItemInt(hDlg, IDC_ROW, NULL, FALSE);
-				g_pSwitcher->dwScrollWheelBehavior = (UINT)SendDlgItemMessageW(hDlg, IDC_WHEELCOMBO, CB_GETCURSEL, 0, 0);
-			}
-			else
-			{
-				HWND existingSwitcher = FindWindowA(SWS_WINDOWSWITCHER_CLASSNAME, NULL);
-				if (existingSwitcher)
-				{
-					SendMessageW(existingSwitcher, SWS_WINDOWSWITCHER_RELOAD_CONFIG_MSG, 0, 0);
-				}
+				SendMessageW(existingSwitcher, SWS_WINDOWSWITCHER_RELOAD_CONFIG_MSG, 0, 0);
 			}
 			if (LOWORD(wParam) == IDOK)
 			{
@@ -371,18 +352,18 @@ void ShowConfDlg(HWND hDlg)
 	}
 	if (g_pSwitcher)
 	{
-		CheckDlgButton(hDlg, IDC_INCLUDEWP, g_pSwitcher->bIncludeWallpaper);
+		CheckDlgButton(hDlg, IDC_INCLUDEWP, g_pSwitcher->settings.bIncludeWallpaper);
 		CheckDlgButton(hDlg, IDC_PRIMARYONLY, g_pSwitcher->bPrimaryOnly);
-		CheckDlgButton(hDlg, IDC_PERMONITOR, g_pSwitcher->bPerMonitor);
-		CheckDlgButton(hDlg, IDC_NO_PERAPP_LIST, g_pSwitcher->bNoPerApplicationList);
-		CheckDlgButton(hDlg, IDC_PERAPP, g_pSwitcher->bSwitcherIsPerApplication);
-		CheckDlgButton(hDlg, IDC_ALWAYS_WIN_TITLE, g_pSwitcher->bAlwaysUseWindowTitleAndIcon);
-		CheckDlgButton(hDlg, IDC_INVWHEEL, g_pSwitcher->bScrollWheelInvert);
+		CheckDlgButton(hDlg, IDC_PERMONITOR, g_pSwitcher->settings.bPerMonitor);
+		CheckDlgButton(hDlg, IDC_NO_PERAPP_LIST, g_pSwitcher->settings.bNoPerApplicationList);
+		CheckDlgButton(hDlg, IDC_PERAPP, g_pSwitcher->settings.bSwitcherIsPerApplication);
+		CheckDlgButton(hDlg, IDC_ALWAYS_WIN_TITLE, g_pSwitcher->settings.bAlwaysUseWindowTitleAndIcon);
+		CheckDlgButton(hDlg, IDC_INVWHEEL, g_pSwitcher->settings.bScrollWheelInvert);
 		CheckDlgButton(hDlg, IDC_SKIPIFONE, g_pSwitcher->bSkipIfOneWindow);
 		SetDlgItemInt(hDlg, IDC_SHOWDELAY, g_pSwitcher->dwShowDelay, FALSE);
-		SetDlgItemInt(hDlg, IDC_COLUMN, g_pSwitcher->dwGridColumns, FALSE);
-		SetDlgItemInt(hDlg, IDC_ROW, g_pSwitcher->dwGridRows, FALSE);
-		SendDlgItemMessageW(hDlg, IDC_WHEELCOMBO, CB_SETCURSEL, g_pSwitcher->dwScrollWheelBehavior, 0);
+		SetDlgItemInt(hDlg, IDC_COLUMN, g_pSwitcher->settings.dwGridColumns, FALSE);
+		SetDlgItemInt(hDlg, IDC_ROW, g_pSwitcher->settings.dwGridRows, FALSE);
+		SendDlgItemMessageW(hDlg, IDC_WHEELCOMBO, CB_SETCURSEL, g_pSwitcher->settings.dwScrollWheelBehavior, 0);
 	}
 	else
 	{
@@ -406,7 +387,7 @@ void ShowConfDlg(HWND hDlg)
 			{
 				CheckDlgButton(hDlg, IDC_INCLUDEWP, FALSE);
 			}
-			if (RegQueryValueExW(hKey, L"PrimaryOnly", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
+			if (RegQueryValueExW(hKey, L"PrimaryMonitorOnly", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
 			{
 				CheckDlgButton(hDlg, IDC_PRIMARYONLY, dwData);
 			}
@@ -448,7 +429,7 @@ void ShowConfDlg(HWND hDlg)
 			}
 			if (RegQueryValueExW(hKey, L"ScrollWheelBehavior", NULL, &dwType, (LPBYTE)&dwData, &dwSize) == ERROR_SUCCESS)
 			{
-				if (dwData > SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_GRIDSCROLL)
+				if (dwData > SWS_SCROLLWHEELBEHAVIOR_EVERYWHERE_IFNOTCLIENTAREA_GRIDSCROLL)
 				{
 					CheckDlgButton(hDlg, IDC_WHEELCOMBO, SWS_SCROLLWHEELBEHAVIOR_DISABLED);
 				}

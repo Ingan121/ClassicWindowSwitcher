@@ -1,4 +1,3 @@
-#define UNICODE
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -10,7 +9,6 @@
 #include "sws_error.h"
 #include "sws_WindowSwitcher.h"
 
-BOOL g_bIsDesktopRaised = FALSE;
 sws_WindowSwitcher* g_sws_WindowSwitcher = NULL;
 
 __declspec(dllexport) sws_error_t sws_main(DWORD initFlags)

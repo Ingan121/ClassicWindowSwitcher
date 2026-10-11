@@ -19,45 +19,39 @@
 #include "sws_utility.h"
 #include "sws_WindowSwitcherLayout.h"
 #include "sws_tshwnd.h"
+#include "sws_WindowSwitcherSettings.h"
 
 typedef struct _sws_WindowSwitcher
 {
 	DWORD dwInitFlags;
     BOOL bIsDynamic;
     HRESULT hrCo;
-    HRESULT hrRo;
-    HMODULE hinstDLL;
     HWND hWnd;
     UINT msgShellHook;
     sws_WindowSwitcherLayout layout;
+    int initialDirection;
     int direction;
 	int scrollDirection;
     int lastKey;
     HBRUSH hBackgroundBrush;
     BOOL bPartialRedraw;
-    ITaskbarList* pTaskList;
     HWND hWndLast;
     BOOL bWasControl;
     HMONITOR hMonitor;
     INT cwIndex;
     DWORD cwMask;
-    HANDLE hEvExit;
     BOOL bIsMouseClicking;
-    long long last_change;
     sws_vector pHWNDList;
     HDPA htshwnds;
-    BOOL bWallpaperAlwaysLast;
-    HWND hWndWallpaper;
     UINT mode;
     HWND lastMiniModehWnd;
-    HWINEVENTHOOK global_hook;
+    HWINEVENTHOOK hookForeground;
+    HWINEVENTHOOK hookCreateDestroy;
     DWORD dwShowDelay;
     BOOL bPrimaryOnly;
     sws_IInputSwitchCallback InputSwitchCallback;
     sws_IInputSwitchControl* pInputSwitchControl;
     UINT vkTilde;
-    UINT dwOverrideMode;
-    UINT opacity;
     HANDLE hShowThread;
     HANDLE hShowSignal;
     BOOL bIsInitialized;
@@ -72,24 +66,12 @@ typedef struct _sws_WindowSwitcher
     HPAINTBUFFER hBufferedPaint;
     INT cwOldIndex;
     DWORD cwOldMask;
-    HDPA hLastClosedWnds;
     long long lastUpdateTime;
     BOOL bShouldStartFlashTimerWhenShowing;
-    DWORD dwOriginalMouseRouting;
-    DWORD dwOriginalScrollWheelBehavior;
 	BOOL bIsCursorOnSwitcher;
 	BOOL bSkipIfOneWindow;
 
-    DWORD bIncludeWallpaper;
-    DWORD bPerMonitor;
-    DWORD bNoPerApplicationList;
-	DWORD dwWallpaperSupport;
-	DWORD bSwitcherIsPerApplication;
-    DWORD bAlwaysUseWindowTitleAndIcon;
-    DWORD dwScrollWheelBehavior;
-    DWORD bScrollWheelInvert;
-	DWORD dwGridColumns;
-    DWORD dwGridRows;
+    sws_WindowSwitcherSettings settings;
 
 	wchar_t wszVersionString[32];
 } sws_WindowSwitcher;
@@ -103,9 +85,9 @@ typedef struct _sws_WindowSwitcher_EndTaskThreadParams
 
 static void _sws_WindowSwitcher_UpdateAccessibleText(sws_WindowSwitcher* _this);
 
-sws_error_t sws_WindowSwitcher_RegisterHotkeys(sws_WindowSwitcher* _this, HKL hkl);
+sws_error_t sws_WindowSwitcher_RegisterHotkeys(sws_WindowSwitcher* _this);
 
-void sws_WindowSwitcher_UnregisterHotkeys(sws_WindowSwitcher* _this);
+void sws_WindowSwitcher_UnregisterHotkeys(sws_WindowSwitcher* _this, BOOL tildeOnly);
 
 void _sws_WindowSwitcher_SwitchToSelectedItemAndDismiss(sws_WindowSwitcher* _this);
 

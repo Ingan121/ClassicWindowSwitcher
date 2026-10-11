@@ -2,12 +2,12 @@
 * Classic Window Switcher (cws) is a reimplementation of the classic CSRSS Windows Alt+Tab window switcher, designed to work on modern versions of Windows, including Windows 11 24H2 and later.
 * Also, it features more modern features, such as UWP icon support, richer navigation with mouse and arrow keys, better HiDPI support, and more.
 * Based on the Simple Window Switcher (sws) from ExplorerPatcher by Valinet.
+* Windhawk version is also available at https://windhawk.net/mods/classic-window-switcher
 
 ![Build status](https://github.com/valinet/sws/actions/workflows/build.yml/badge.svg)
 
 ## Example usage
 * Build `ClassicWindowSwitcher` and `cws-loader` projects, and run `ClassicWindowSwitcher.exe`.
-* Loading CWS inside Explorer.exe is also possible by using the `cws-loader.wh.cpp` Windhawk mod from this repository. You must change the DLL path in the mod settings to point to your path of `ClassicWindowSwitcher.dll`.
 * You can also put the CWS DLL as `C:\Windows\dxgi.dll` to have it loaded by Explorer.exe automatically on every launch, replacing the default Windows Alt+Tab switcher.
 * Note that you must disable the default Windows Alt+Tab switcher by setting `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AltTabSettings` to `1` (DWORD) for the standalone CWS executable to work properly.
 
@@ -33,7 +33,7 @@ Steps:
 1. Clone git repo
 
    ```
-   git clone https://github.com/valinet/sws
+   git clone https://github.com/Ingan121/ClassicWindowSwitcher
    ```
 
    If "git" is not found as a command, type its full path, or have its folder added to PATH, or open Git command window in the respective folder if using Git for Windows.
@@ -69,7 +69,7 @@ That's it.
 |`ShowDelay`|Set to the number of milliseconds to wait before showing the switcher.<br>Set to `0` to show the switcher immediately.|100 ms|
 |`IncludeWallpaper`|Set to `1` to include the 'show desktop' item at the end of the list.|Hidden (`0`)|
 |`PrimaryMonitorOnly`|Set to `1` to show the switcher only on the primary monitor.|Shown on the monitor where the mouse cursor is located (`0`)|
-|`PerMonitor`|Not implemented yet. Only show windows on the switcher's monitor?|Disabled (`0`)|
+|`PerMonitor`|Only show items on the switcher's monitor.|Disabled (`0`)|
 |`NoPerApplicationList`|Set to `1` to disable the per-application window list, which is shown when `Alt+Tilde` is pressed.|Enabled (`0`)|
 |`SwitcherIsPerApplication`|Set to `1` to make the switcher only show a single entry per application.|Disabled (`0`)|
 |`AlwaysUseWindowTitleAndIcon`|Set to `1` to always use the window title and icon.|Disabled (`0`)|

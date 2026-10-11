@@ -1,20 +1,5 @@
 ﻿#include "sws_WindowSwitcherLayout.h"
 
-static BOOL CALLBACK _sws_WindowSwitcherLayout_EnumWindowsCallback(_In_ HWND hWnd, _In_ sws_WindowSwitcherLayout* _this)
-{
-	if (sws_WindowHelpers_IsAltTabWindow(hWnd) || (_this->bIncludeWallpaper && !_this->bWallpaperAlwaysLast && hWnd == _this->hWndWallpaper))
-	{
-		sws_WindowSwitcherLayoutWindow swsLayoutWindow;
-		sws_WindowSwitcherLayoutWindow_Initialize(&swsLayoutWindow, hWnd, NULL);
-		sws_vector_PushBack(&_this->pWindowList, &swsLayoutWindow);
-		DWORD band;
-		_sws_GetWindowBand(hWnd, &band);
-		if (band != ZBID_DESKTOP) _this->numTopMost++;
-	}
-
-	return TRUE;
-}
-
 sws_error_t sws_WindowSwitcherLayout_InvalidateLayout(sws_WindowSwitcherLayout* _this)
 {
 	sws_error_t rv = SWS_ERROR_SUCCESS;
@@ -66,10 +51,6 @@ sws_error_t sws_WindowSwitcherLayout_ComputeLayout(sws_WindowSwitcherLayout* _th
 
 			for (int iCurrentWindow = iObtainedIndex ? iObtainedIndex : _this->iIndex; iCurrentWindow >= 0; iCurrentWindow--)
 			{
-				//TCHAR name[200];
-				//GetWindowTextW(pWindowList[iCurrentWindow].hWnd, name, 200);
-				//wprintf(L"%d %s ", pWindowList[iCurrentWindow].hWnd, name);
-
 				if (pWindowList[iCurrentWindow].hWnd == _this->hWnd)
 				{
 					continue;
@@ -132,18 +113,6 @@ sws_error_t sws_WindowSwitcherLayout_ComputeLayout(sws_WindowSwitcherLayout* _th
 		}
 	}
 
-	if (!rv)
-	{
-		/*printf("\n");
-		sws_WindowSwitcherLayoutWindow* pWindowList = _this->pWindowList.pList;
-		for (UINT i = 0; i < _this->pWindowList.cbSize; ++i)
-		{
-			TCHAR name[200];
-			GetWindowText(pWindowList[i].hWnd, name, 200);
-			wprintf(L"%d %s\n", pWindowList[i].hWnd, name);
-		}*/
-	}
-
 	return rv;
 }
 
@@ -168,11 +137,10 @@ void sws_WindowSwitcherLayout_Clear(sws_WindowSwitcherLayout* _this)
 sws_error_t sws_WindowSwitcherLayout_Initialize(
 	sws_WindowSwitcherLayout* _this, 
 	HMONITOR hMonitor, 
-	HWND hWnd, 
-	DWORD* settings, 
+	HWND hWnd,
+	sws_WindowSwitcherSettings settings,
 	sws_vector* pHWNDList, 
-	HWND hWndTarget,
-	HWND hWndWallpaper
+	HWND hWndTarget
 )
 {
 	sws_error_t rv = SWS_ERROR_SUCCESS;
@@ -206,17 +174,14 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 	}
 	if (!rv)
 	{
-		_this->bWallpaperAlwaysLast = SWS_WINDOWSWITCHERLAYOUT_WALLPAPER_ALWAYS_LAST;
-		_this->bIncludeWallpaper = SWS_WINDOWSWITCHERLAYOUT_INCLUDE_WALLPAPER;
-		if (settings) _this->bIncludeWallpaper = settings[0] && settings[3];
-		_this->bWallpaperToggleBehavior = SWS_WINDOWSWITCHERLAYOUT_WALLPAPER_TOGGLE;
-		_this->hWndWallpaper = hWndWallpaper;
-		if (_this->bIncludeWallpaper)
+		_this->bIncludeWallpaper = settings.bIncludeWallpaper;
+		HWND hDesktop = GetShellWindow();
+		if (_this->bIncludeWallpaper && hDesktop)
 		{
-			if (_this->bWallpaperAlwaysLast && !hWndTarget)
+			if (!hWndTarget)
 			{
 				sws_WindowSwitcherLayoutWindow swsLayoutWindow;
-				sws_WindowSwitcherLayoutWindow_Initialize(&swsLayoutWindow, _this->hWndWallpaper, NULL);
+				sws_WindowSwitcherLayoutWindow_Initialize(&swsLayoutWindow, hDesktop, NULL);
 				sws_vector_PushBack(&_this->pWindowList, &swsLayoutWindow);
 			}
 		}
@@ -243,7 +208,6 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 				WCHAR wszRundll32Path[MAX_PATH];
 				GetSystemDirectoryW(wszRundll32Path, MAX_PATH);
 				wcscat_s(wszRundll32Path, MAX_PATH, L"\\rundll32.exe");
-				//HWND hWndForeground = GetForegroundWindow();
 				for (int i = pHWNDList->cbSize - 1; i >= 0; i--)
 				{
 					BOOL isCloaked;
@@ -270,14 +234,20 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 							}
 						}
 					}
-					if (!hWndTarget && settings[4] && _wcsicmp(windowList[i].wszPath, wszRundll32Path))
+					if (!hWndTarget && settings.bSwitcherIsPerApplication && _wcsicmp(windowList[i].wszPath, wszRundll32Path))
 					{
 						BOOL bShouldContinue = FALSE;
 						for (int j = i - 1; j >= 0; j--)
 						{
+							BOOL isCandidateCloaked = FALSE;
+							DwmGetWindowAttribute(windowList[j].hWnd, DWMWA_CLOAKED, &isCandidateCloaked, sizeof(BOOL));
+							if (isCandidateCloaked)
+							{
+								continue;
+							}
 							if (sws_WindowHelpers_IsAltTabWindow(windowList[j].hWnd) && windowList[i].wszAUMID && windowList[j].wszAUMID)
 							{
-								if (!wcscmp(windowList[i].wszAUMID, windowList[j].wszAUMID) && (settings[1] ? MonitorFromWindow(windowList[i].hWnd, MONITOR_DEFAULTTONULL) == MonitorFromWindow(windowList[j].hWnd, MONITOR_DEFAULTTONULL) : TRUE))
+								if (!wcscmp(windowList[i].wszAUMID, windowList[j].wszAUMID) && (settings.bPerMonitor ? MonitorFromWindow(windowList[i].hWnd, MONITOR_DEFAULTTONULL) == MonitorFromWindow(windowList[j].hWnd, MONITOR_DEFAULTTONULL) : TRUE))
 								{
 									windowList[j].pNextWindow = windowList + i;
 									bShouldContinue = TRUE;
@@ -286,7 +256,7 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 							}
 							else if (sws_WindowHelpers_IsAltTabWindow(windowList[j].hWnd) &&
 								(windowList[i].dwProcessId == windowList[j].dwProcessId || !_wcsicmp(windowList[i].wszPath, windowList[j].wszPath)) &&
-								(settings[1] ? MonitorFromWindow(windowList[i].hWnd, MONITOR_DEFAULTTONULL) == MonitorFromWindow(windowList[j].hWnd, MONITOR_DEFAULTTONULL) : TRUE))
+								(settings.bPerMonitor ? MonitorFromWindow(windowList[i].hWnd, MONITOR_DEFAULTTONULL) == MonitorFromWindow(windowList[j].hWnd, MONITOR_DEFAULTTONULL) : TRUE))
 							{
 								bShouldContinue = TRUE;
 								break;
@@ -297,7 +267,7 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 							continue;
 						}
 					}
-					if (settings[1] && hMonitor != MonitorFromWindow(windowList[i].hWnd, MONITOR_DEFAULTTONULL))
+					if (settings.bPerMonitor && hMonitor != MonitorFromWindow(windowList[i].hWnd, MONITOR_DEFAULTTONULL))
 					{
 						continue;
 					}
@@ -331,7 +301,6 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 		{
 			if (!pWindowList[iCurrentWindow].hIcon)
 			{
-				double factor = SWS_UWP_ICON_SCALE_FACTOR;
 				pWindowList[iCurrentWindow].rcIcon.left = 0;
 				pWindowList[iCurrentWindow].rcIcon.top = 0;
 				pWindowList[iCurrentWindow].rcIcon.right = SWS_WINDOWSWITCHERLAYOUT_ICONSIZE * (_this->cbDpiX / DEFAULT_DPI_X);
@@ -345,28 +314,33 @@ sws_error_t sws_WindowSwitcherLayout_Initialize(
 	{
 		NONCLIENTMETRICS ncm;
 		ncm.cbSize = sizeof(NONCLIENTMETRICS);
-		SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0, _this->cbDpiX);
-
-		_this->cbBorderSize = ncm.iBorderWidth;
-
-		_this->hFontRegular = CreateFontIndirectW(&ncm.lfCaptionFont);
-		if (!_this->hFontRegular)
+		if (!SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0, _this->cbDpiX))
 		{
-			rv = sws_error_Report(sws_error_GetFromWin32Error(GetLastError()), NULL);
+			rv = sws_error_Report(HRESULT_FROM_WIN32(GetLastError()), NULL);
 		}
 		else
 		{
-			HDC hdc = GetDC(_this->hWnd);
-			HGDIOBJ hOldFont = SelectObject(hdc, _this->hFontRegular);
+			_this->cbBorderSize = ncm.iBorderWidth;
 
-			TEXTMETRICW tm;
-			GetTextMetricsW(hdc, &tm);
+			_this->hFontRegular = CreateFontIndirectW(&ncm.lfCaptionFont);
+			if (!_this->hFontRegular)
+			{
+				rv = sws_error_Report(HRESULT_FROM_WIN32(GetLastError()), NULL);
+			}
+			else
+			{
+				HDC hdc = GetDC(_this->hWnd);
+				HGDIOBJ hOldFont = SelectObject(hdc, _this->hFontRegular);
 
-			SelectObject(hdc, hOldFont);
-			ReleaseDC(_this->hWnd, hdc);
+				TEXTMETRICW tm;
+				GetTextMetricsW(hdc, &tm);
 
-			_this->cbFontHeight = tm.tmHeight;
-			//printf("font width: %d, height: %d\n", tm.tmAveCharWidth, tm.tmHeight);
+				SelectObject(hdc, hOldFont);
+				ReleaseDC(_this->hWnd, hdc);
+
+				_this->cbFontHeight = tm.tmHeight;
+				printf(L"font width: %d, height: %d\n", tm.tmAveCharWidth, tm.tmHeight);
+			}
 		}
 	}
 

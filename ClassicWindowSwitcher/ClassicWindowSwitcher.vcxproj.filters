@@ -45,6 +45,9 @@
     <ClCompile Include="sws_tshwnd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sws_WindowSwitcherSettings.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sws_def.h">

@@ -13,6 +13,7 @@
 #include "sws_WindowSwitcherLayoutWindow.h"
 #include "sws_WindowHelpers.h"
 #include "sws_IconPainter.h"
+#include "sws_WindowSwitcherSettings.h"
 
 typedef struct _sws_WindowSwitcherLayout
 {
@@ -31,16 +32,11 @@ typedef struct _sws_WindowSwitcherLayout
 	MONITORINFO mi;
 	unsigned int numTopMost;
 	BOOL bIncludeWallpaper;
-	BOOL bWallpaperAlwaysLast;
-	BOOL bWallpaperToggleBehavior;
-	HWND hWndWallpaper;
 	HFONT hFontRegular;
 	unsigned int cbFontHeight;
 	unsigned int cbBorderSize;
 	long long timestamp;
 } sws_WindowSwitcherLayout;
-
-static BOOL CALLBACK _sws_WindowSwitcherLayout_EnumWindowsCallback(_In_ HWND hWnd, _In_ sws_WindowSwitcherLayout* _this);
 
 sws_error_t sws_WindowSwitcherLayout_InvalidateLayout(sws_WindowSwitcherLayout* _this);
 
@@ -49,13 +45,12 @@ sws_error_t sws_WindowSwitcherLayout_ComputeLayout(sws_WindowSwitcherLayout* _th
 void sws_WindowSwitcherLayout_Clear(sws_WindowSwitcherLayout* _this);
 
 sws_error_t sws_WindowSwitcherLayout_Initialize(
-	sws_WindowSwitcherLayout* _this, 
+	sws_WindowSwitcherLayout* _this,
 	HMONITOR hMonitor,
 	HWND hWnd,
-	DWORD* settings,
+	sws_WindowSwitcherSettings settings,
 	sws_vector* pHWNDList,
-	HWND hWndTarget,
-	HWND hWndWallpaper
+	HWND hWndTarget
 );
 
 #endif

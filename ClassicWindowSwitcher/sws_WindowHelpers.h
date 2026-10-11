@@ -19,11 +19,12 @@
 #include "sws_def.h"
 #include "sws_error.h"
 #include "sws_tshwnd.h"
+//#include "sws_WindowSwitcher.h"
+//#include "sws_WindowSwitcherLayoutWindow.h"
 
 extern ULONG_PTR _sws_gdiplus_token;
 
 // References:
-// RealEnumWindows: https://stackoverflow.com/questions/38205375/enumwindows-function-in-win10-enumerates-only-desktop-apps
 // IsAltTabWindow: https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863
 // GetIconFromHWND: https://github.com/cairoshell/ManagedShell/blob/master/src/ManagedShell.WindowsTasks/ApplicationWindow.cs
 
@@ -32,12 +33,6 @@ DEFINE_GUID(__uuidof_IShellItemImageFactory,
 	0xbcc18b79,
 	0xba16, 0x442f, 0x80, 0xc4,
 	0x8a, 0x59, 0xc3, 0x0c, 0x46, 0x3b
-);
-
-DEFINE_GUID(__uuidof_IShellItem2,
-	0x7e9fb0d3,
-	0x919f, 0x4307, 0xab, 0x2e,
-	0x9b, 0x18, 0x60, 0x31, 0x0c, 0x93
 );
 
 DEFINE_GUID(__uuidof_IPropertyStore,
@@ -56,9 +51,6 @@ DEFINE_GUID(__uuidof_AppUserModelIdProperty,
 
 // {c8900b66-a973-584b-8cae-355b7f55341b}
 DEFINE_GUID(CLSID_StartMenuCacheAndAppResolver, 0x660b90c8, 0x73a9, 0x4b58, 0x8c, 0xae, 0x35, 0x5b, 0x7f, 0x55, 0x34, 0x1b);
-
-// {46a6eeff-908e-4dc6-92a6-64be9177b41c}
-DEFINE_GUID(IID_IAppResolver_7, 0x46a6eeff, 0x908e, 0x4dc6, 0x92, 0xa6, 0x64, 0xbe, 0x91, 0x77, 0xb4, 0x1c);
 
 // {de25675a-72de-44b4-9373-05170450c140}
 DEFINE_GUID(IID_IAppResolver_8, 0xde25675a, 0x72de, 0x44b4, 0x93, 0x73, 0x05, 0x17, 0x04, 0x50, 0xc1, 0x40);
@@ -94,48 +86,15 @@ interface IAppResolver_8
 	CONST_VTBL struct IAppResolver_8Vtbl* lpVtbl;
 };
 
-#define STATUS_BUFFER_TOO_SMALL 0xC0000023
-typedef NTSTATUS(WINAPI* NtUserBuildHwndList)
-(
-	HDESK in_hDesk,
-	HWND  in_hWndNext,
-	BOOL  in_EnumChildren,
-	BOOL  in_RemoveImmersive,
-	DWORD in_ThreadID,
-	UINT  in_Max,
-	HWND* out_List,
-	UINT* out_Cnt
-	);
-extern HMODULE _sws_hWin32u;
-extern NtUserBuildHwndList _sws_pNtUserBuildHwndList;
-
-typedef struct
-{
-	int nAccentState;
-	int nFlags;
-	int nColor;
-	int nAnimationId;
-} ACCENTPOLICY;
-typedef struct
-{
-	int nAttribute;
-	PVOID pData;
-	ULONG ulDataSize;
-} WINCOMPATTRDATA;
-extern HINSTANCE _sws_hUser32;
-typedef BOOL(WINAPI* pSetWindowCompositionAttribute)(HWND, WINCOMPATTRDATA*);
-extern pSetWindowCompositionAttribute _sws_SetWindowCompositionAttribute;
 typedef BOOL(WINAPI* pIsShellManagedWindow)(HWND);
-extern pIsShellManagedWindow _sws_IsShellManagedWindow;
 extern pIsShellManagedWindow sws_IsShellFrameWindow;
 typedef HWND(WINAPI* pHungWindowFromGhostWindow)(HWND);
 extern pHungWindowFromGhostWindow _sws_HungWindowFromGhostWindow;
 typedef HWND(WINAPI* pGhostWindowFromHungWindow)(HWND);
 extern pGhostWindowFromHungWindow _sws_GhostWindowFromHungWindow;
-typedef HICON(WINAPI* pInternalGetWindowIcon)(HWND,UINT);
-extern pInternalGetWindowIcon _sws_InternalGetWindowIcon;
-typedef HWND(WINAPI* pIsCoreWindow)(HWND);
-extern pIsCoreWindow _sws_IsCoreWindow;
+typedef DWORD_PTR(WINAPI* pForceFocusBasedMouseWheelRouting)(BOOL enabled);
+extern pForceFocusBasedMouseWheelRouting _sws_ForceFocusBasedMouseWheelRouting;
+typedef BOOL(WINAPI* pSHWindowsPolicy)(REFGUID riid);
 
 typedef HWND(WINAPI* pCreateWindowInBand)(
 	_In_ DWORD dwExStyle,
@@ -153,24 +112,6 @@ typedef HWND(WINAPI* pCreateWindowInBand)(
 	DWORD band
 	);
 extern pCreateWindowInBand _sws_CreateWindowInBand;
-
-typedef BOOL(WINAPI* pSetWindowBand)(HWND hWnd, HWND hwndInsertAfter, DWORD dwBand);
-extern pSetWindowBand _sws_SetWindowBand;
-
-typedef BOOL(WINAPI* pGetWindowBand)(HWND hWnd, PDWORD pdwBand);
-extern pGetWindowBand _sws_GetWindowBand;
-
-extern FARPROC sws_SHRegGetValueFromHKCUHKLM;
-
-extern BOOL(*_sws_ShouldSystemUseDarkMode)();
-extern void(*_sws_RefreshImmersiveColorPolicyState)();
-extern HINSTANCE _sws_hUxtheme;
-
-BOOL(*_sws_IsTopLevelWindow)(HWND);
-
-HWND(*_sws_GetProgmanWindow)();
-
-int(*sws_InternalGetWindowText)(HWND, LPWSTR, int);
 
 FILETIME sws_start_ft;
 FILETIME sws_ancient_ft;
@@ -219,54 +160,19 @@ enum ZBID
 	ZBID_ABOVELOCK_UX = 18,
 };
 
-static BOOL _sws_IsBandValidToInclude[19] = { FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE };
-
-HWND* _sws_WindowHelpers_Gui_BuildWindowList
-(
-	NtUserBuildHwndList pNtUserBuildHwndList,
-	HDESK in_hDesk,
-	HWND  in_hWnd,
-	BOOL  in_EnumChildren,
-	BOOL  in_RemoveImmersive,
-	UINT  in_ThreadID,
-	INT* out_Cnt
-);
-
-/********************************************************/
-/* enumerate all top level windows including metro apps */
-/********************************************************/
-sws_error_t sws_WindowHelpers_RealEnumWindows(
-	WNDENUMPROC in_Proc,
-	LPARAM in_Param
-);
-
 wchar_t* sws_WindowHelpers_GetAUMIDForHWND(HWND hWnd);
 
 BOOL sws_WindowHelpers_IsValidMonitor(HMONITOR hMonitor, HDC unnamedParam2, LPRECT unnamedParam3, HMONITOR* pMonitor);
 
-BOOL sws_WindowHelpers_IsTaskbarWindow(HWND hWnd, HWND hWndWallpaper);
-
 BOOL sws_WindowHelpers_IsAltTabWindow(HWND hwnd);
 
 void sws_WindowHelpers_GetDesktopText(wchar_t* wszTitle);
-
-BOOL sws_WindowHelpers_EnsureWallpaperHWND();
-
-HWND sws_WindowHelpers_GetWallpaperHWND();
-
-HBITMAP sws_WindowHelpers_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, DWORD dwTextFlags, SIZE size, COLORREF inColour);
 
 HWND sws_WindowHelpers_GetLastActivePopup(HWND hWnd);
 
 void sws_WindowHelpers_Clear();
 
 sws_error_t sws_WindowHelpers_Initialize();
-
-extern BOOL g_bIsDesktopRaised;
-inline BOOL _sws_WindowHelpers_IsDesktopRaised()
-{
-	return g_bIsDesktopRaised;
-}
 
 inline void _sws_WindowHelpers_ToggleDesktop()
 {
@@ -279,7 +185,7 @@ inline void _sws_WindowHelpers_ToggleDesktop()
 
 inline BOOL sws_WindowHelpers_IsWindowUWP(HWND hWnd)
 {
-	return sws_IsShellFrameWindow(hWnd);
+	return sws_IsShellFrameWindow && sws_IsShellFrameWindow(hWnd);
 }
 
 BOOL CALLBACK sws_WindowHelpers_AddAltTabWindowsToTimeStampedHWNDList(HWND hWnd, HDPA hdpa);
@@ -287,4 +193,8 @@ BOOL CALLBACK sws_WindowHelpers_AddAltTabWindowsToTimeStampedHWNDList(HWND hWnd,
 BOOL sws_WindowHelpers_AreAnimationsAllowed();
 
 void sws_WindowHelpers_GetWindowText(HWND hWnd, LPCWSTR lpWStr, DWORD dwLength);
+
+//extern struct sws_WindowSwitcher;
+//extern struct sws_WindowSwitcherLayoutWindow;
+//void sws_WindowHelpers_GetDesiredWindowText(sws_WindowSwitcher* _this, sws_WindowSwitcherLayoutWindow* window, LPWSTR wszTitle);
 #endif
