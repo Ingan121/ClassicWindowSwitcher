@@ -23,7 +23,7 @@ static void _sws_WindowSwitcher_UpdateAccessibleText(sws_WindowSwitcher* _this)
                 _this->layout.pWindowList.cbSize - _this->layout.iIndex,
                 _this->layout.pWindowList.cbSize
             );
-            //printf(L"[sws] Accesible text: %s.\n", wszAccText);
+            //printf("[sws] Accesible text: %s.\n", wszAccText);
             SetWindowTextW(_this->hWndAccessible, wszAccText);
             NotifyWinEvent(
                 EVENT_OBJECT_LIVEREGIONCHANGED,
@@ -1101,7 +1101,7 @@ static void WINAPI _sws_WindowSwitcher_Show(sws_WindowSwitcher* _this)
     _this->layout.iFirstItemIndex = _this->layout.pWindowList.cbSize;
     int col = _this->settings.dwGridColumns;
     int row = _this->settings.dwGridRows;
-    printf(L"[sws] cbSize=%d col=%d", _this->layout.pWindowList.cbSize, col);
+    printf("[sws] cbSize=%d col=%d", _this->layout.pWindowList.cbSize, col);
     if (_this->initialDirection == SWS_WINDOWSWITCHERLAYOUT_COMPUTE_DIRECTION_BACKWARD)
     {
         _this->layout.iIndex = 0;
@@ -1986,7 +1986,7 @@ static LRESULT _sws_WindowsSwitcher_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
         if (vk && vk != _this->vkTilde)
         {
             _this->vkTilde = vk;
-            printf(L"Layout changed");
+            printf("Layout changed");
             sws_WindowSwitcher_UnregisterHotkeys(_this, TRUE);
             sws_WindowSwitcher_RegisterHotkeys(_this);
         }
